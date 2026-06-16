@@ -75,8 +75,6 @@ components.html(
 )
 
 
-# Parchment background from a real paper texture (embedded as base64 so it always
-# loads on Streamlit Cloud), plus custom "scroll card" notices.
 @st.cache_data
 def _parchment_data_uri() -> str:
     img = Path(__file__).parent / "assets" / "parchment.jpg"
@@ -95,6 +93,12 @@ use_magic_font = st.toggle(
     help="關閉後會改用系統預設字體，閱讀性比較穩定。",
 )
 
+title_font_family = (
+    "'XiaoDou', serif"
+    if use_magic_font
+    else 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
+)
+
 if use_magic_font:
     font_css = """
     @font-face {
@@ -111,8 +115,7 @@ if use_magic_font:
     div[role="listbox"], div[role="listbox"] *,
     div[role="option"], div[role="option"] *,
     ul[data-testid="stVirtualDropdown"], ul[data-testid="stVirtualDropdown"] *,
-    li[data-testid="stVirtualDropdownOption"], li[data-testid="stVirtualDropdownOption"] *,
-    .main-title, .main-title * {
+    li[data-testid="stVirtualDropdownOption"], li[data-testid="stVirtualDropdownOption"] * {
         font-family: 'XiaoDou', serif !important;
     }
     """
@@ -126,8 +129,7 @@ else:
     div[role="listbox"], div[role="listbox"] *,
     div[role="option"], div[role="option"] *,
     ul[data-testid="stVirtualDropdown"], ul[data-testid="stVirtualDropdown"] *,
-    li[data-testid="stVirtualDropdownOption"], li[data-testid="stVirtualDropdownOption"] *,
-    .main-title, .main-title * {
+    li[data-testid="stVirtualDropdownOption"], li[data-testid="stVirtualDropdownOption"] * {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif !important;
     }
     """
@@ -213,16 +215,18 @@ st.markdown(
         background-color: rgba(236,221,176,0.90);
     }
     </style>
-    """.replace("__BG__", _parchment_data_uri()).replace("__FONT_CSS__", font_css).replace("__FONT__", _font_data_uri()),
+    """.replace("__BG__", _parchment_data_uri())
+    .replace("__FONT_CSS__", font_css)
+    .replace("__FONT__", _font_data_uri()),
     unsafe_allow_html=True,
 )
 
 st.markdown(
-    """
-    <h1 class="main-title">
-        <span class="title-line">预言家日報</span>
-        <span class="title-dot">・</span>
-        <span class="title-line">防窥工坊</span>
+    f"""
+    <h1 class="main-title" style="font-family: {title_font_family} !important;">
+        <span class="title-line" style="font-family: {title_font_family} !important;">预言家日報</span>
+        <span class="title-dot" style="font-family: {title_font_family} !important;">・</span>
+        <span class="title-line" style="font-family: {title_font_family} !important;">防窥工坊</span>
     </h1>
     """,
     unsafe_allow_html=True,
@@ -254,16 +258,13 @@ def _run(data: bytes, cfg_dict: dict, jpg_quality: int) -> bytes:
     return encode_image(processed, "JPG", jpg_quality)
 
 
-# --------------------------------------------------------------------------- #
-# Controls — all on the main page (mobile friendly)
-# --------------------------------------------------------------------------- #
 preset_options = list(PRESETS.keys())
 default_preset = "Maximum" if "Maximum" in preset_options else preset_options[0]
 
 preset_name = st.selectbox(
     "咒語強度",
     preset_options,
-    index=preset_options.index(default_preset),  # 預設「重度」
+    index=preset_options.index(default_preset),
     format_func=lambda k: PRESET_LABELS.get(k, k),
 )
 
@@ -334,10 +335,6 @@ cfg = ProtectionConfig(
     blur_radius=blur_radius,
 )
 
-
-# --------------------------------------------------------------------------- #
-# Upload -> auto-process -> download -> preview
-# --------------------------------------------------------------------------- #
 uploaded = st.file_uploader("獻上你的卷軸", type=SUPPORTED, accept_multiple_files=False)
 
 if uploaded is None:
@@ -352,7 +349,7 @@ data = uploaded.getvalue()
 try:
     original = Image.open(io.BytesIO(data))
     original.load()
-except Exception as exc:  # noqa: BLE001
+except Exception as exc:
     st.error(f"無法讀取這張圖片：{exc}")
     st.stop()
 
@@ -365,7 +362,7 @@ with st.spinner("揮舞魔杖中…"):
 
 stem = uploaded.name.rsplit(".", 1)[0]
 st.download_button(
-    "速速前！取回卷軸(Accio)",
+    "速速前！取回卷軸——Accio!",
     data=result_bytes,
     file_name=f"{stem}_protected.jpg",
     mime="image/jpeg",
@@ -374,13 +371,6 @@ st.download_button(
 )
 
 st.subheader("施咒後")
-if flip_output:
-    st.markdown(
-        '<div class="scroll-note warn">⚠️ 下圖是<b>顛倒+鏡像</b>的，這是正常的。'
-        '閱讀時把圖<b>上下翻轉（垂直翻轉）</b>即可完全還原。</div>',
-        unsafe_allow_html=True,
-    )
-
 st.image(result_bytes, use_container_width=True)
 st.caption(
     f"{original.width} × {original.height}px · JPG · "
