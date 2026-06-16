@@ -24,7 +24,7 @@ from processor import (
 
 st.set_page_config(
     page_title="预言家日報・防窥工坊",
-    page_icon="static/favicon.png",
+    page_icon="🪄",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
@@ -57,9 +57,12 @@ components.html(
         el.setAttribute("content", content);
     }
 
-    upsertLink("manifest", "/app/static/manifest.json");
-    upsertLink("icon", "/app/static/favicon.png", {"type": "image/png"});
-    upsertLink("apple-touch-icon", "/app/static/apple-touch-icon.png");
+    const faviconUrl = "https://raw.githubusercontent.com/surf0912/ai-ocr-protector/main/static/favicon.png";
+    const appleIconUrl = "https://raw.githubusercontent.com/surf0912/ai-ocr-protector/main/static/apple-touch-icon.png";
+
+    upsertLink("icon", faviconUrl, {"type": "image/png"});
+    upsertLink("shortcut icon", faviconUrl, {"type": "image/png"});
+    upsertLink("apple-touch-icon", appleIconUrl, {"sizes": "180x180"});
 
     upsertMeta("theme-color", "#8a2d2d");
     upsertMeta("apple-mobile-web-app-capable", "yes");
