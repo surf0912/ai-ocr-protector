@@ -11,6 +11,7 @@ import io
 from pathlib import Path
 
 import streamlit as st
+import streamlit.components.v1 as components
 from PIL import Image
 
 from processor import (
@@ -22,8 +23,52 @@ from processor import (
 )
 
 st.set_page_config(
-    page_title="预言家日報・防窥工坊", page_icon="🪄",
-    layout="centered", initial_sidebar_state="collapsed",
+    page_title="预言家日報・防窥工坊",
+    page_icon="static/favicon.png",
+    layout="centered",
+    initial_sidebar_state="collapsed",
+)
+
+components.html(
+    """
+    <script>
+    const head = window.parent.document.head;
+
+    function upsertLink(rel, href, attrs = {}) {
+        let el = head.querySelector(`link[rel="${rel}"]`);
+        if (!el) {
+            el = window.parent.document.createElement("link");
+            el.setAttribute("rel", rel);
+            head.appendChild(el);
+        }
+        el.setAttribute("href", href);
+        for (const [key, value] of Object.entries(attrs)) {
+            el.setAttribute(key, value);
+        }
+    }
+
+    function upsertMeta(name, content) {
+        let el = head.querySelector(`meta[name="${name}"]`);
+        if (!el) {
+            el = window.parent.document.createElement("meta");
+            el.setAttribute("name", name);
+            head.appendChild(el);
+        }
+        el.setAttribute("content", content);
+    }
+
+    upsertLink("manifest", "/app/static/manifest.json");
+    upsertLink("icon", "/app/static/favicon.png", {"type": "image/png"});
+    upsertLink("apple-touch-icon", "/app/static/apple-touch-icon.png");
+
+    upsertMeta("theme-color", "#8a2d2d");
+    upsertMeta("apple-mobile-web-app-capable", "yes");
+    upsertMeta("apple-mobile-web-app-title", "预言家日報・防窥工坊");
+    upsertMeta("apple-mobile-web-app-status-bar-style", "black-translucent");
+    </script>
+    """,
+    height=0,
+    width=0,
 )
 
 # Parchment background from a real paper texture (embedded as base64 so it always
