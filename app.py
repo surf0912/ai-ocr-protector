@@ -34,11 +34,11 @@ SUPPORTED = ["jpg", "jpeg", "png", "webp"]
 
 
 @st.cache_data(show_spinner=False)
-def _run(data: bytes, cfg_dict: dict, out_format: str) -> bytes:
+def _run(data: bytes, cfg_dict: dict, out_format: str, jpg_quality: int) -> bytes:
     cfg = ProtectionConfig(**cfg_dict)
     img = Image.open(io.BytesIO(data))
     processed = process_image(img, cfg)
-    return encode_image(processed, out_format)
+    return encode_image(processed, out_format, jpg_quality)
 
 
 # --------------------------------------------------------------------------- #
@@ -52,7 +52,18 @@ with st.sidebar:
         help="Stealth = practically invisible to the eye. Maximum = most "
              "disruptive but you can tell it was processed.",
     )
-    out_format = st.radio("Output format", ["PNG", "JPG"], horizontal=True)
+    out_format = st.radio(
+        "Output format", ["JPG", "PNG"], horizontal=True,
+        help="JPG is best for photos. PNG is lossless but, because of the noise "
+             "layer, becomes very large (often 5–10× the original).",
+    )
+    if out_format == "JPG":
+        jpg_quality = st.slider("JPG quality", 60, 100, 92, 1,
+                                help="Lower = smaller file. 92 is a good balance.")
+    else:
+        jpg_quality = 92
+        st.caption("⚠️ PNG of a noisy photo can be much larger than the original. "
+                   "Use JPG for photos.")
 
     with st.expander("Advanced (optional)", expanded=False):
         st.caption("Override the preset. Defaults follow the chosen preset.")
@@ -135,17 +146,23 @@ if megapixels > 24:
     st.warning(f"Large image ({megapixels:.0f} MP) — processing may take a few seconds.")
 
 with st.spinner("Processing automatically…"):
-    result_bytes = _run(data, cfg.to_dict(), out_format)
+    result_bytes = _run(data, cfg.to_dict(), out_format, jpg_quality)
 
 left, right = st.columns(2)
 with left:
     st.subheader("Original")
     st.image(data, use_container_width=True)
-    st.caption(f"{original.width} × {original.height}px · {original.format or uploaded.type}")
+    st.caption(f"{original.width} × {original.height}px · {original.format or uploaded.type} "
+               f"· {len(data) / 1_000_000:.1f} MB")
 with right:
     st.subheader("Protected")
     st.image(result_bytes, use_container_width=True)
-    st.caption(f"{original.width} × {original.height}px · {out_format} · dimensions preserved")
+    out_mb = len(result_bytes) / 1_000_000
+    note = ""
+    if out_format == "PNG" and len(result_bytes) > 2 * len(data):
+        note = " — try JPG for a much smaller file"
+    st.caption(f"{original.width} × {original.height}px · {out_format} · {out_mb:.1f} MB"
+               f" · dimensions preserved{note}")
 
 ext = "jpg" if out_format == "JPG" else "png"
 stem = uploaded.name.rsplit(".", 1)[0]
