@@ -57,10 +57,7 @@ preset_name = st.selectbox(
     format_func=lambda k: PRESET_LABELS.get(k, k),
 )
 
-flip_output = st.checkbox(
-    "輸出時旋轉 180° + 鏡像(人可自行翻回)", value=True,
-    help="增加干擾;對人是可逆的,對陽春 OCR 有效,但擋不住強 AI。",
-)
+flip_output = st.checkbox("輸出時旋轉 180° + 鏡像", value=True)
 
 with st.expander("進階設定(可選)"):
     base = config_from_preset(preset_name)
