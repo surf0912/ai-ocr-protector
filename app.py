@@ -33,10 +33,9 @@ st.caption(
 SUPPORTED = ["jpg", "jpeg", "png", "webp"]
 
 PRESET_LABELS = {
-    "Extreme": "極限(預設・最大化擋 AI・畫面明顯變醜、人較難讀)",
-    "Maximum": "最強(明顯處理過,較難被 AI 讀)",
-    "Standard": "標準(看得出處理,擋一般 AI/OCR)",
-    "Light": "輕度(僅擋陽春 OCR,擋不住 GPT／Claude)",
+    "Standard": "標準",
+    "Maximum": "重度",
+    "Extreme": "極限",
 }
 
 
@@ -52,12 +51,12 @@ def _run(data: bytes, cfg_dict: dict, jpg_quality: int) -> bytes:
 # Controls — all on the main page (mobile friendly)
 # --------------------------------------------------------------------------- #
 preset_name = st.selectbox(
-    "保護強度", list(PRESETS.keys()), index=0,
+    "保護強度", list(PRESETS.keys()), index=len(PRESETS) - 1,  # 預設「極限」
     format_func=lambda k: PRESET_LABELS.get(k, k),
 )
 st.caption(
-    "⚠️ 老實說:能真正擋住 GPT／Claude 的設定一定看得出處理痕跡;"
-    "輕度設定人眼舒服,但 AI 仍讀得到。"
+    "⚠️ 老實說:只有「極限」能真正擋住 GPT／Claude,但畫面明顯變醜、人也較難讀;"
+    "標準/重度對強 AI 不一定擋得住。"
 )
 
 flip_output = st.checkbox(

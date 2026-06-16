@@ -83,32 +83,26 @@ class ProtectionConfig:
 # accepts that the output looks processed. "Light" is kept but honestly labelled
 # as effective only against basic OCR.
 PRESETS: dict[str, dict] = {
-    "Extreme": dict(  # nuke: maximises AI disruption; clearly ugly, hard for humans too
-        warp_enabled=True, warp_amplitude=11.0, warp_cell=0.02,
-        noise_enabled=True, noise_sigma=18.0,
-        mask_enabled=True, mask_opacity=0.30, use_grid=True,
-        use_diagonal=True, use_crosshatch=True,
-        spacing_min=5, spacing_max=9, line_width_min=1, line_width_max=2,
-        rotate_180=True, flip_horizontal=True, blur_enabled=False,
-    ),
-    "Maximum": dict(  # hardest-while-arguably-readable; clearly processed
-        warp_enabled=True, warp_amplitude=3.5, warp_cell=0.045,
-        noise_enabled=True, noise_sigma=10.0,
-        mask_enabled=True, mask_opacity=0.16, use_grid=True,
-        use_diagonal=True, use_crosshatch=True,
-        rotate_180=True, flip_horizontal=True, blur_enabled=False,
-    ),
-    "Standard": dict(  # looks processed but readable; stops weaker AI/OCR
+    "Standard": dict(  # 標準 — looks processed but readable; stops weaker AI/OCR
         warp_enabled=True, warp_amplitude=2.5, warp_cell=0.05,
         noise_enabled=True, noise_sigma=6.0,
         mask_enabled=True, mask_opacity=0.11, use_grid=False,
         use_diagonal=True, use_crosshatch=True,
         rotate_180=True, flip_horizontal=True, blur_enabled=False,
     ),
-    "Light": dict(  # honest: stops basic OCR only, NOT strong multimodal models
-        warp_enabled=True, warp_amplitude=1.5, warp_cell=0.05,
-        noise_enabled=True, noise_sigma=4.0,
-        mask_enabled=False,
+    "Maximum": dict(  # 重度 — clearly processed; harder for AI
+        warp_enabled=True, warp_amplitude=3.5, warp_cell=0.045,
+        noise_enabled=True, noise_sigma=10.0,
+        mask_enabled=True, mask_opacity=0.16, use_grid=True,
+        use_diagonal=True, use_crosshatch=True,
+        rotate_180=True, flip_horizontal=True, blur_enabled=False,
+    ),
+    "Extreme": dict(  # 極限 — maximises AI disruption; ugly, hard for humans too
+        warp_enabled=True, warp_amplitude=11.0, warp_cell=0.02,
+        noise_enabled=True, noise_sigma=18.0,
+        mask_enabled=True, mask_opacity=0.30, use_grid=True,
+        use_diagonal=True, use_crosshatch=True,
+        spacing_min=5, spacing_max=9, line_width_min=1, line_width_max=2,
         rotate_180=True, flip_horizontal=True, blur_enabled=False,
     ),
 }
