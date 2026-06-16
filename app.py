@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import base64
 import io
+from datetime import date
 from pathlib import Path
 
 import streamlit as st
@@ -218,13 +219,14 @@ PRESET_LABELS = {
 
 
 @st.cache_data(show_spinner=False)
-def _run(data: bytes, cfg_dict: dict, jpg_quality: int, author: str, title: str) -> bytes:
+def _run(data: bytes, cfg_dict: dict, jpg_quality: int,
+         author: str, title: str, work_date: str) -> bytes:
     img = Image.open(io.BytesIO(data))
-    if author or title:
+    if author or title or work_date:
         # Protect the image content WITHOUT geometry, add a crisp title band, then
         # flip the whole thing — so the band reads upright once flipped back.
         cfg_no_geo = ProtectionConfig(**{**cfg_dict, "rotate_180": False, "flip_horizontal": False})
-        banded = add_title_band(process_image(img, cfg_no_geo), title, author)
+        banded = add_title_band(process_image(img, cfg_no_geo), title, author, work_date)
         if cfg_dict.get("rotate_180"):
             banded = banded.transpose(Image.ROTATE_180)
         if cfg_dict.get("flip_horizontal"):
@@ -312,12 +314,17 @@ cfg = ProtectionConfig(
     blur_radius=blur_radius,
 )
 
-st.markdown("**署名（選填）** — 印在每張頂端、跟著一起翻轉，翻回後即為正向")
-col_t, col_a = st.columns(2)
-with col_t:
-    work_title = st.text_input("篇名", placeholder="例：第一章 風起")
-with col_a:
-    work_author = st.text_input("作者名稱", placeholder="例：佚名")
+st.markdown("**署名橫幅（選填）** — 印在每張頂端、跟著一起翻轉，翻回後即為正向（繁簡皆可）")
+band_on = st.checkbox("加上署名橫幅", value=False)
+if band_on:
+    col_t, col_a = st.columns(2)
+    with col_t:
+        band_title = st.text_input("篇名", placeholder="例：第一章 風起")
+    with col_a:
+        band_author = st.text_input("作者名稱", placeholder="例：佚名")
+    band_date = st.date_input("日期", value=date.today()).strftime("%Y-%m-%d")
+else:
+    band_title = band_author = band_date = ""
 
 uploaded_files = st.file_uploader(
     "獻上卷軸（可一次多張）", type=SUPPORTED, accept_multiple_files=True
@@ -342,7 +349,7 @@ for i, uf in enumerate(uploaded_files):
         st.error(f"無法讀取「{uf.name}」：{exc}")
         continue
     with st.spinner(f"揮舞魔杖中…（{i + 1}/{len(uploaded_files)}）"):
-        protected = _run(raw, cfg.to_dict(), jpg_quality, work_author, work_title)
+        protected = _run(raw, cfg.to_dict(), jpg_quality, band_author, band_title, band_date)
     results.append((uf.name, raw, protected, im.size))
     if progress:
         progress.progress((i + 1) / len(uploaded_files))

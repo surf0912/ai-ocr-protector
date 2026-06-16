@@ -355,19 +355,24 @@ def protect_bytes(data: bytes, cfg: ProtectionConfig, out_format: str = "PNG") -
     return encode_image(processed, out_format)
 
 
-_BAND_FONT = Path(__file__).parent / "assets" / "band-font.ttf"
+# Noto Sans CJK — covers both Traditional and Simplified Chinese (server-side only,
+# so its size doesn't affect what the browser downloads).
+_BAND_FONT = Path(__file__).parent / "assets" / "band-font.otf"
 
 
-def add_title_band(img: Image.Image, title: str = "", author: str = "") -> Image.Image:
-    """Prepend a parchment band with the work's title + author to the top of `img`.
+def add_title_band(
+    img: Image.Image, title: str = "", author: str = "", date: str = ""
+) -> Image.Image:
+    """Prepend a parchment band with the work's title / author / date to the top.
 
     Drawn crisp (not warped) and meant to be flipped together with the image, so a
     reader who flips the result back sees the credit upright and legible. Returns a
-    taller image (band height + original). No-op if both fields are empty.
+    taller image (band height + original). No-op if all fields are empty.
     """
     title = (title or "").strip()
     author = (author or "").strip()
-    if not (title or author):
+    date = (date or "").strip()
+    if not (title or author or date):
         return img
 
     base = img.convert("RGB")
@@ -387,8 +392,9 @@ def add_title_band(img: Image.Image, title: str = "", author: str = "") -> Image
     lines = []
     if title:
         lines.append((title, _fit(title, 0.055)))
-    if author:
-        lines.append(("作者：" + author, _fit("作者：" + author, 0.038)))
+    meta = "　·　".join(p for p in [("作者：" + author) if author else "", date] if p)
+    if meta:
+        lines.append((meta, _fit(meta, 0.038)))
 
     gap = max(4, int(W * 0.012))
     bboxes = [(t, f, f.getbbox(t)) for t, f in lines]
