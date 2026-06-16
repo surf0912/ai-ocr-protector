@@ -88,9 +88,9 @@ def _font_data_uri() -> str:
 
 
 use_magic_font = st.toggle(
-    "魔法字体",
+    "魔法字體",
     value=True,
-    help="关闭后会改用系统预设字体，阅读性比较稳定。",
+    help="關閉後會改用系統預設字體，閱讀性比較穩定。",
 )
 
 title_font_face_css = (
