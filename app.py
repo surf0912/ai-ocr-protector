@@ -85,7 +85,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.title("🪄 麻瓜驅逐咒")
+st.title("🪄 預言家日報・防窺工坊")
 
 st.markdown(
     '<div class="scroll-note">'
