@@ -22,7 +22,7 @@ from processor import (
 )
 
 st.set_page_config(
-    page_title="麻瓜驅逐咒", page_icon="🪄",
+    page_title="預言家日報・防窺工坊", page_icon="🪄",
     layout="centered", initial_sidebar_state="collapsed",
 )
 
