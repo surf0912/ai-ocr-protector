@@ -93,11 +93,7 @@ use_magic_font = st.toggle(
     help="關閉後會改用系統預設字體，閱讀性比較穩定。",
 )
 
-title_font_family = (
-    "'XiaoDou', serif"
-    if use_magic_font
-    else 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
-)
+title_font_class = "magic-title" if use_magic_font else "system-title"
 
 if use_magic_font:
     font_css = """
@@ -155,6 +151,16 @@ st.markdown(
 
     __FONT_CSS__
 
+    .magic-title,
+    .magic-title * {
+        font-family: 'XiaoDou', serif !important;
+    }
+
+    .system-title,
+    .system-title * {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif !important;
+    }
+
     [data-testid="stIconMaterial"], .material-icons, .material-icons-outlined,
     .material-icons-rounded {
         font-family: 'Material Symbols Rounded','Material Symbols Outlined','Material Icons' !important;
@@ -165,7 +171,7 @@ st.markdown(
         text-align: center;
         color: #2F2114 !important;
         font-size: clamp(36px, 8vw, 58px) !important;
-        font-weight: 900 !important;
+        font-weight: 400 !important;
         line-height: 1.12 !important;
         letter-spacing: 0.02em !important;
         margin: 1.4rem auto 1.2rem auto !important;
@@ -223,10 +229,10 @@ st.markdown(
 
 st.markdown(
     f"""
-    <h1 class="main-title" style="font-family: {title_font_family} !important;">
-        <span class="title-line" style="font-family: {title_font_family} !important;">预言家日報</span>
-        <span class="title-dot" style="font-family: {title_font_family} !important;">・</span>
-        <span class="title-line" style="font-family: {title_font_family} !important;">防窥工坊</span>
+    <h1 class="main-title {title_font_class}">
+        <span class="title-line">预言家日報</span>
+        <span class="title-dot">・</span>
+        <span class="title-line">防窥工坊</span>
     </h1>
     """,
     unsafe_allow_html=True,
