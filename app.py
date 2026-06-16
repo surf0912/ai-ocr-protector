@@ -125,9 +125,9 @@ st.markdown(
 SUPPORTED = ["jpg", "jpeg", "png", "webp"]
 
 PRESET_LABELS = {
-    "Standard": "标准",
+    "Standard": "標準",
     "Maximum": "重度",
-    "Extreme": "极限",
+    "Extreme": "極限",
 }
 
 
