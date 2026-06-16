@@ -8,8 +8,9 @@ from __future__ import annotations
 
 import base64
 import io
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import streamlit as st
 from PIL import Image
@@ -322,7 +323,11 @@ if band_on:
         band_title = st.text_input("篇名", placeholder="例：第一章 風起")
     with col_a:
         band_author = st.text_input("作者名稱", placeholder="例：佚名")
-    band_date = st.date_input("日期", value=date.today()).strftime("%Y-%m-%d")
+    try:
+        _today = datetime.now(ZoneInfo("Asia/Taipei")).date()  # pin to TW, not server tz
+    except Exception:
+        _today = date.today()
+    band_date = st.date_input("日期", value=_today).strftime("%Y-%m-%d")
 else:
     band_title = band_author = band_date = ""
 

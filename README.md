@@ -45,6 +45,20 @@ is both comfortable for humans and reliably defeats modern multimodal models —
 geometric flips don't stop them, and disruption strong enough to stop them also
 hurts human reading. Re-screenshotting / re-compressing can also weaken it.
 
+### Multi-image
+
+Upload several images at once → each is processed and gets its own **numbered
+one-tap download button** (no ZIP — saves straight as JPG). Originals are tucked
+into a collapsed section so you can skip them.
+
+### Title band (署名橫幅, optional)
+
+Toggle on 署名橫幅 to stamp a parchment credit strip on top of every image with
+**篇名 / 作者名稱 / 日期** (date defaults to *today in Asia/Taipei*, editable).
+The band is drawn crisp and added *before* the flip, so it rides along and reads
+upright once the viewer flips it back. Rendered with **Noto Sans CJK**, so it
+works for both Traditional and Simplified Chinese. Applies to the whole batch.
+
 ## Run locally
 
 ```bash
@@ -85,6 +99,10 @@ pyftsubset assets/YuseiMagic-Regular-2.ttf --text-file=/tmp/subset.txt \
 > Yusei Magic is a Japanese font; it covers our Traditional-Chinese glyphs but not
 > Simplified ones — keep UI text Traditional. Verify coverage with `fontTools`.
 
+- **Title-band font:** `assets/band-font.otf` (Noto Sans CJK, OFL) — used only
+  server-side to draw the credit band, so its 16 MB never reaches the browser. It
+  covers Traditional **and** Simplified, so author/title can be either.
+
 ## Files
 
 | File | Purpose |
@@ -93,7 +111,8 @@ pyftsubset assets/YuseiMagic-Regular-2.ttf --text-file=/tmp/subset.txt \
 | `processor.py` | Pure pipeline. `process_image()`, `protect_bytes()`, presets — Streamlit-free, reusable for an API |
 | `assets/parchment.jpg` | Background texture (embedded) |
 | `assets/uifont.woff2` | Subset Yusei Magic (embedded) |
-| `assets/YuseiMagic-Regular-2.ttf` | Font source (for re-subsetting only; not served) |
+| `assets/YuseiMagic-Regular-2.ttf` | UI font source (for re-subsetting only; not served) |
+| `assets/band-font.otf` | Noto Sans CJK — draws the title band server-side (TC + SC) |
 | `.streamlit/config.toml` | Upload limit + parchment theme colours |
 
 ## Reuse as a library
@@ -112,4 +131,4 @@ Warp and noise run in row-strips, so a 12 MP phone photo processes in ~1.5 s wit
 
 ## Future ideas
 
-Batch + ZIP download · redact-only-sensitive-fields mode · PDF support · API endpoint.
+ZIP download (currently per-image by design) · redact-only-sensitive-fields mode · PDF support · API endpoint.
