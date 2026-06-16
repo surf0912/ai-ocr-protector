@@ -136,12 +136,52 @@ st.markdown(
         background-attachment: fixed;
         background-repeat: no-repeat;
     }
-    [data-testid="stHeader"] { background: transparent; }
+
+    [data-testid="stHeader"] {
+        background: transparent;
+    }
+
     __FONT_CSS__
+
     [data-testid="stIconMaterial"], .material-icons, .material-icons-outlined,
     .material-icons-rounded {
         font-family: 'Material Symbols Rounded','Material Symbols Outlined','Material Icons' !important;
     }
+
+    .main-title {
+        width: 100%;
+        text-align: center;
+        color: #2F2114 !important;
+        font-size: clamp(36px, 8vw, 58px) !important;
+        font-weight: 900 !important;
+        line-height: 1.12 !important;
+        letter-spacing: 0.02em !important;
+        margin: 1.4rem auto 1.2rem auto !important;
+        word-break: keep-all !important;
+    }
+
+    .main-title .title-line,
+    .main-title .title-dot {
+        display: inline;
+    }
+
+    @media (max-width: 430px) {
+        .main-title {
+            font-size: clamp(40px, 11vw, 54px) !important;
+            line-height: 1.15 !important;
+            margin-top: 1.2rem !important;
+            margin-bottom: 1.1rem !important;
+        }
+
+        .main-title .title-line {
+            display: block;
+        }
+
+        .main-title .title-dot {
+            display: none;
+        }
+    }
+
     .scroll-note {
         background-color: rgba(233,216,174,0.90);
         border: 1px solid #C2A867;
@@ -152,14 +192,31 @@ st.markdown(
         color: #3A2A17;
         line-height: 1.75;
     }
-    .scroll-note .scroll-title { font-weight: 700; margin-bottom: 0.35rem; }
-    .scroll-note.warn { border-left-color: #9A6B1F; background-color: rgba(236,221,176,0.90); }
+
+    .scroll-note .scroll-title {
+        font-weight: 700;
+        margin-bottom: 0.35rem;
+    }
+
+    .scroll-note.warn {
+        border-left-color: #9A6B1F;
+        background-color: rgba(236,221,176,0.90);
+    }
     </style>
     """.replace("__BG__", _parchment_data_uri()).replace("__FONT_CSS__", font_css).replace("__FONT__", _font_data_uri()),
     unsafe_allow_html=True,
 )
 
-st.title("🪄 预言家日報・防窥工坊")
+st.markdown(
+    """
+    <h1 class="main-title">
+        <span class="title-line">预言家日報</span>
+        <span class="title-dot">・</span>
+        <span class="title-line">防窥工坊</span>
+    </h1>
+    """,
+    unsafe_allow_html=True,
+)
 
 st.markdown(
     '<div class="scroll-note">'
@@ -205,17 +262,30 @@ flip_output = st.checkbox("施展顛倒咒（旋轉+鏡像）", value=True)
 with st.expander("進階魔法"):
     base = config_from_preset(preset_name)
 
-    jpg_quality = st.slider("JPG 品質", 60, 100, 92, 1,
-                            help="數字越低檔案越小；92 是不錯的平衡。")
+    jpg_quality = st.slider(
+        "JPG 品質",
+        60,
+        100,
+        92,
+        1,
+        help="數字越低檔案越小；92 是不錯的平衡。",
+    )
 
-    st.markdown("**微形變 (Micro-warp)** — 打散字形，抗 AI 的關鍵之一")
+    st.markdown("**微形變 (Micro-warp)**")
     warp_enabled = st.checkbox("啟用微形變", value=base.warp_enabled)
-    warp_amplitude = st.slider("形變強度 (px)", 0.0, 15.0, float(base.warp_amplitude), 0.5,
-                               help="越大越能干擾，但扭曲越明顯。")
+    warp_amplitude = st.slider(
+        "形變強度 (px)",
+        0.0,
+        15.0,
+        float(base.warp_amplitude),
+        0.5,
+        help="越大越能干擾，但扭曲越明顯。",
+    )
 
-    st.markdown("**干擾遮罩** — 對 AI 最有效，但看得見")
+    st.markdown("**干擾遮罩**")
     mask_enabled = st.checkbox("啟用遮罩", value=base.mask_enabled)
     mask_opacity = st.slider("遮罩不透明度", 0.03, 0.40, float(base.mask_opacity), 0.01)
+
     col_a, col_b, col_c = st.columns(3)
     with col_a:
         use_diagonal = st.checkbox("斜線", value=base.use_diagonal)
@@ -223,6 +293,7 @@ with st.expander("進階魔法"):
         use_crosshatch = st.checkbox("交叉斜線", value=base.use_crosshatch)
     with col_c:
         use_grid = st.checkbox("細格網", value=base.use_grid)
+
     spacing = st.slider("線距 (px @1000px)", 6, 30, (base.spacing_min, base.spacing_max))
     line_width = st.slider("線寬 (px)", 1, 4, (base.line_width_min, base.line_width_max))
 
@@ -299,11 +370,16 @@ if flip_output:
         '閱讀時把圖<b>上下翻轉（垂直翻轉）</b>即可完全還原。</div>',
         unsafe_allow_html=True,
     )
+
 st.image(result_bytes, use_container_width=True)
-st.caption(f"{original.width} × {original.height}px · JPG · "
-           f"{len(result_bytes) / 1_000_000:.1f} MB · 尺寸已保留")
+st.caption(
+    f"{original.width} × {original.height}px · JPG · "
+    f"{len(result_bytes) / 1_000_000:.1f} MB · 尺寸已保留"
+)
 
 with st.expander("窺看原貌"):
     st.image(data, use_container_width=True)
-    st.caption(f"{original.width} × {original.height}px · "
-               f"{original.format or uploaded.type} · {len(data) / 1_000_000:.1f} MB")
+    st.caption(
+        f"{original.width} × {original.height}px · "
+        f"{original.format or uploaded.type} · {len(data) / 1_000_000:.1f} MB"
+    )
