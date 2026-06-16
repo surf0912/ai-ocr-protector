@@ -355,13 +355,19 @@ for idx, (name, raw, protected, size) in enumerate(results):
         key=f"dl_{idx}",
     )
 
-# Previews below (single image opens expanded).
-for idx, (name, raw, protected, size) in enumerate(results):
-    with st.expander(f"預覽「{name}」", expanded=(len(results) == 1)):
+# Two sections: all protected together, then all originals (collapsed).
+n = len(results)
+suffix = f"（{n} 張）" if n > 1 else ""
+
+with st.expander("預覽成品" + suffix, expanded=True):
+    for name, raw, protected, size in results:
         st.image(protected, use_container_width=True)
         st.caption(
-            f"{size[0]} × {size[1]}px · JPG · "
+            f"「{name}」· {size[0]} × {size[1]}px · JPG · "
             f"{len(protected) / 1_000_000:.1f} MB · 尺寸已保留"
         )
-        st.markdown("**原貌**")
+
+with st.expander("窺看原貌" + suffix, expanded=False):
+    for name, raw, protected, size in results:
         st.image(raw, use_container_width=True)
+        st.caption(f"「{name}」· 原檔")
