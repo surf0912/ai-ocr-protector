@@ -1,9 +1,10 @@
 """Core image-protection pipeline.
 
 Design goal (revised): disrupt OCR / AI extraction while keeping the image as
-readable as possible to a human. The heaviest human-impacting steps (180° rotate,
-horizontal flip, visible mask, blur) are therefore OFF by default and kept only as
-manual options. The default protection relies on two low-human-impact techniques:
+readable as possible to a human. By default the output is rotated 180° (the reader
+just rotates it back — it's a rotation, not a mirror), plus two low-human-impact
+techniques below. The remaining heavy steps (horizontal flip, visible mask, blur)
+stay OFF and are manual options. The low-human-impact techniques are:
 
     * micro-warp  - a smooth sub-pixel-to-2px displacement field that breaks the
       clean glyph geometry OCR/embeddings rely on, while the eye barely notices.
@@ -57,8 +58,11 @@ class ProtectionConfig:
     use_crosshatch: bool = True
     use_grid: bool = False
 
-    # --- Geometry (OFF by default: these hurt human reading the most) ---
-    rotate_180: bool = False
+    # --- Geometry ---
+    # rotate_180 ON by default: output is upside-down (a human just rotates it
+    # back — it's a rotation, not a mirror, so text isn't reversed) which adds
+    # AI/OCR disruption with no information loss for humans.
+    rotate_180: bool = True
     flip_horizontal: bool = False
 
     # --- Optional blur (OFF: hurts reading) ---
@@ -78,21 +82,21 @@ PRESETS: dict[str, dict] = {
         warp_enabled=True, warp_amplitude=1.2, warp_cell=0.05,
         noise_enabled=True, noise_sigma=3.0,
         mask_enabled=False,
-        rotate_180=False, flip_horizontal=False, blur_enabled=False,
+        rotate_180=True, flip_horizontal=False, blur_enabled=False,
     ),
     "Balanced": dict(  # slight texture if you look closely
         warp_enabled=True, warp_amplitude=2.0, warp_cell=0.05,
         noise_enabled=True, noise_sigma=5.0,
         mask_enabled=True, mask_opacity=0.07, use_grid=False,
         use_diagonal=True, use_crosshatch=True,
-        rotate_180=False, flip_horizontal=False, blur_enabled=False,
+        rotate_180=True, flip_horizontal=False, blur_enabled=False,
     ),
     "Maximum": dict(  # clearly processed but still readable
         warp_enabled=True, warp_amplitude=3.0, warp_cell=0.045,
         noise_enabled=True, noise_sigma=8.0,
         mask_enabled=True, mask_opacity=0.12, use_grid=True,
         use_diagonal=True, use_crosshatch=True,
-        rotate_180=False, flip_horizontal=False, blur_enabled=False,
+        rotate_180=True, flip_horizontal=False, blur_enabled=False,
     ),
 }
 

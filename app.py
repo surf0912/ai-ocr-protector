@@ -61,6 +61,12 @@ with st.sidebar:
     # Always JPG: PNG of a noisy photo balloons to 5-10x the original.
     out_format = "JPG"
 
+    flip_output = st.checkbox(
+        "輸出時旋轉 180°(上下顛倒,閱讀時轉回即可)", value=True,
+        help="預設讓 AI／OCR 拿到顛倒的圖以增加干擾;這是旋轉不是鏡像,"
+             "人眼把圖轉 180° 就能正常閱讀,字不會左右相反。",
+    )
+
     with st.expander("進階設定(可選)", expanded=False):
         st.caption("可覆寫預設值。預設值會跟著上面選的強度走。")
         base = config_from_preset(preset_name)
@@ -93,10 +99,7 @@ with st.sidebar:
         line_width = st.slider("線寬 (px)", 1, 4,
                                (base.line_width_min, base.line_width_max))
 
-        st.markdown("**高人眼影響選項**(預設關閉)")
-        st.caption("⚠️ 這些會明顯影響人眼閱讀,非必要請勿開啟。")
-        rotate_180 = st.checkbox("旋轉 180°", value=base.rotate_180)
-        flip_horizontal = st.checkbox("水平翻轉", value=base.flip_horizontal)
+        st.markdown("**模糊(可選・會降低可讀性)**")
         blur_enabled = st.checkbox("輕微模糊", value=base.blur_enabled)
         blur_radius = st.slider("模糊半徑 (px)", 0.0, 1.0, float(base.blur_radius), 0.1)
 
@@ -115,8 +118,8 @@ with st.sidebar:
         use_diagonal=use_diagonal,
         use_crosshatch=use_crosshatch,
         use_grid=use_grid,
-        rotate_180=rotate_180,
-        flip_horizontal=flip_horizontal,
+        rotate_180=flip_output,
+        flip_horizontal=False,
         blur_enabled=blur_enabled,
         blur_radius=blur_radius,
     )
@@ -147,6 +150,18 @@ if megapixels > 24:
 with st.spinner("自動處理中…"):
     result_bytes = _run(data, cfg.to_dict(), out_format, jpg_quality)
 
+# Download button up top so you don't have to scroll past the previews.
+ext = "jpg" if out_format == "JPG" else "png"
+stem = uploaded.name.rsplit(".", 1)[0]
+st.download_button(
+    "⬇️ 下載保護後的圖片",
+    data=result_bytes,
+    file_name=f"{stem}_protected.{ext}",
+    mime="image/jpeg" if out_format == "JPG" else "image/png",
+    type="primary",
+    use_container_width=True,
+)
+
 left, right = st.columns(2)
 with left:
     st.subheader("原圖")
@@ -158,30 +173,3 @@ with right:
     st.image(result_bytes, use_container_width=True)
     out_mb = len(result_bytes) / 1_000_000
     st.caption(f"{original.width} × {original.height}px · JPG · {out_mb:.1f} MB · 尺寸已保留")
-
-ext = "jpg" if out_format == "JPG" else "png"
-stem = uploaded.name.rsplit(".", 1)[0]
-st.download_button(
-    "⬇️ 下載保護後的圖片",
-    data=result_bytes,
-    file_name=f"{stem}_protected.{ext}",
-    mime="image/jpeg" if out_format == "JPG" else "image/png",
-    type="primary",
-)
-
-with st.expander("運作原理與誠實的限制"):
-    st.markdown(
-        """
-**預設(隱形)——調校成對人眼幾乎無感:**
-- **微形變**:以平滑的 1–2px 位移輕微扭曲字形幾何。OCR 的字元辨識與影像
-  embedding 會變差,但因整體輪廓保留,肉眼幾乎察覺不到。
-- **輕微雜訊**:低強度高斯雜訊,干擾 OCR 依賴的乾淨邊緣。
-
-**更強的預設**會再加上淡淡的線條遮罩(也可手動開啟旋轉／翻轉／模糊),
-用部分人眼可讀性換取更強的干擾。
-
-**誠實的限制:**沒有任何處理能「對人眼隱形」又「可靠擋住現代強大的多模態
-模型」。輕微的擾動也可能因為重新截圖或重新壓縮而被削弱。需要最強效果、
-且能接受看得出處理痕跡時,請用「最強」。
-        """
-    )
