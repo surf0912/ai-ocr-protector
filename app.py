@@ -20,22 +20,16 @@ from processor import (
 )
 
 st.set_page_config(
-    page_title="AI／OCR 圖片保護工具", page_icon="🛡️",
+    page_title="圖片保護工具", page_icon="🛡️",
     layout="centered", initial_sidebar_state="collapsed",
 )
 
-st.title("🛡️ AI／OCR 圖片保護工具")
-st.caption(
-    "上傳圖片,自動處理成讓 OCR 與 AI 更難讀取的版本(人可自行翻回)。"
-    "支援任意尺寸,輸出 JPG。"
-)
+st.title("🛡️ 圖片保護工具")
 
 st.info(
     "📌 **使用提醒**\n\n"
-    "- 請上傳「**正向原圖**」。處理後輸出會是**顛倒+鏡像**的版本——這是正常的,代表有處理到。\n"
-    "- 要閱讀:把圖做一次「**上下翻轉(垂直翻轉)**」就能完全還原。\n"
-    "- **不要把已處理過(顛倒)的圖再上傳**,會被翻回正常、保護就失效了。\n"
-    "- 越強的保護(重度/極限)越難被 AI 讀,但畫面也越醜、人越難讀——這是無法避免的取捨。"
+    "- 請上傳「**正向原圖**」,處理後輸出會是**顛倒+鏡像**的版本。\n"
+    "- **不要把已處理過(顛倒)的圖再上傳**,保護就失效了。"
 )
 
 SUPPORTED = ["jpg", "jpeg", "png", "webp"]
@@ -61,10 +55,6 @@ def _run(data: bytes, cfg_dict: dict, jpg_quality: int) -> bytes:
 preset_name = st.selectbox(
     "保護強度", list(PRESETS.keys()), index=len(PRESETS) - 1,  # 預設「極限」
     format_func=lambda k: PRESET_LABELS.get(k, k),
-)
-st.caption(
-    "⚠️ 老實說:只有「極限」能真正擋住 GPT／Claude,但畫面明顯變醜、人也較難讀;"
-    "標準/重度對強 AI 不一定擋得住。"
 )
 
 flip_output = st.checkbox(
