@@ -30,6 +30,14 @@ st.caption(
     "支援任意尺寸,輸出 JPG。"
 )
 
+st.info(
+    "📌 **使用提醒**\n\n"
+    "- 請上傳「**正向原圖**」。處理後輸出會是**顛倒+鏡像**的版本——這是正常的,代表有處理到。\n"
+    "- 要閱讀:把圖做一次「**上下翻轉(垂直翻轉)**」就能完全還原。\n"
+    "- **不要把已處理過(顛倒)的圖再上傳**,會被翻回正常、保護就失效了。\n"
+    "- 越強的保護(重度/極限)越難被 AI 讀,但畫面也越醜、人越難讀——這是無法避免的取捨。"
+)
+
 SUPPORTED = ["jpg", "jpeg", "png", "webp"]
 
 PRESET_LABELS = {
@@ -152,6 +160,8 @@ st.download_button(
 )
 
 st.subheader("保護後")
+if flip_output:
+    st.warning("⚠️ 下圖是**顛倒+鏡像**的,這是正常的。閱讀時把圖**上下翻轉(垂直翻轉)**即可完全還原。")
 st.image(result_bytes, use_container_width=True)
 st.caption(f"{original.width} × {original.height}px · JPG · "
            f"{len(result_bytes) / 1_000_000:.1f} MB · 尺寸已保留")
