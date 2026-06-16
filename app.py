@@ -16,6 +16,7 @@ from PIL import Image
 from processor import (
     PRESETS,
     ProtectionConfig,
+    add_title_band,
     config_from_preset,
     encode_image,
     process_image,
@@ -217,10 +218,20 @@ PRESET_LABELS = {
 
 
 @st.cache_data(show_spinner=False)
-def _run(data: bytes, cfg_dict: dict, jpg_quality: int) -> bytes:
-    cfg = ProtectionConfig(**cfg_dict)
+def _run(data: bytes, cfg_dict: dict, jpg_quality: int, author: str, title: str) -> bytes:
     img = Image.open(io.BytesIO(data))
-    processed = process_image(img, cfg)
+    if author or title:
+        # Protect the image content WITHOUT geometry, add a crisp title band, then
+        # flip the whole thing — so the band reads upright once flipped back.
+        cfg_no_geo = ProtectionConfig(**{**cfg_dict, "rotate_180": False, "flip_horizontal": False})
+        banded = add_title_band(process_image(img, cfg_no_geo), title, author)
+        if cfg_dict.get("rotate_180"):
+            banded = banded.transpose(Image.ROTATE_180)
+        if cfg_dict.get("flip_horizontal"):
+            banded = banded.transpose(Image.FLIP_LEFT_RIGHT)
+        processed = banded
+    else:
+        processed = process_image(img, ProtectionConfig(**cfg_dict))
     return encode_image(processed, "JPG", jpg_quality)
 
 
@@ -301,6 +312,13 @@ cfg = ProtectionConfig(
     blur_radius=blur_radius,
 )
 
+st.markdown("**署名（選填）** — 印在每張頂端、跟著一起翻轉，翻回後即為正向")
+col_t, col_a = st.columns(2)
+with col_t:
+    work_title = st.text_input("篇名", placeholder="例：第一章 風起")
+with col_a:
+    work_author = st.text_input("作者名稱", placeholder="例：佚名")
+
 uploaded_files = st.file_uploader(
     "獻上卷軸（可一次多張）", type=SUPPORTED, accept_multiple_files=True
 )
@@ -324,7 +342,7 @@ for i, uf in enumerate(uploaded_files):
         st.error(f"無法讀取「{uf.name}」：{exc}")
         continue
     with st.spinner(f"揮舞魔杖中…（{i + 1}/{len(uploaded_files)}）"):
-        protected = _run(raw, cfg.to_dict(), jpg_quality)
+        protected = _run(raw, cfg.to_dict(), jpg_quality, work_author, work_title)
     results.append((uf.name, raw, protected, im.size))
     if progress:
         progress.progress((i + 1) / len(uploaded_files))
@@ -345,8 +363,12 @@ if len(results) > 1:
 # All download buttons grouped together so you can tap through them quickly.
 for idx, (name, raw, protected, size) in enumerate(results):
     stem = name.rsplit(".", 1)[0]
+    if len(results) > 1:
+        label = f"{idx + 1}/{len(results)} 速速前！取回「{stem}」"
+    else:
+        label = "速速前！取回卷軸——Accio!"
     st.download_button(
-        f"速速前！取回「{stem}」",
+        label,
         data=protected,
         file_name=f"{stem}_protected.jpg",
         mime="image/jpeg",

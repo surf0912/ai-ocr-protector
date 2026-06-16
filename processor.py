@@ -28,7 +28,9 @@ from dataclasses import dataclass, asdict
 from typing import Optional
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter, ImageOps
+from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 
 
 # --------------------------------------------------------------------------- #
@@ -351,3 +353,59 @@ def protect_bytes(data: bytes, cfg: ProtectionConfig, out_format: str = "PNG") -
     img = Image.open(io.BytesIO(data))
     processed = process_image(img, cfg)
     return encode_image(processed, out_format)
+
+
+_BAND_FONT = Path(__file__).parent / "assets" / "band-font.ttf"
+
+
+def add_title_band(img: Image.Image, title: str = "", author: str = "") -> Image.Image:
+    """Prepend a parchment band with the work's title + author to the top of `img`.
+
+    Drawn crisp (not warped) and meant to be flipped together with the image, so a
+    reader who flips the result back sees the credit upright and legible. Returns a
+    taller image (band height + original). No-op if both fields are empty.
+    """
+    title = (title or "").strip()
+    author = (author or "").strip()
+    if not (title or author):
+        return img
+
+    base = img.convert("RGB")
+    W, H = base.size
+    pad = max(10, int(W * 0.03))
+    font_path = str(_BAND_FONT)
+
+    def _fit(text: str, start_frac: float, min_px: int = 14) -> ImageFont.FreeTypeFont:
+        size = max(min_px, int(W * start_frac))
+        while size > min_px:
+            f = ImageFont.truetype(font_path, size)
+            if f.getbbox(text)[2] <= W - 2 * pad:
+                return f
+            size -= 2
+        return ImageFont.truetype(font_path, min_px)
+
+    lines = []
+    if title:
+        lines.append((title, _fit(title, 0.055)))
+    if author:
+        lines.append(("作者：" + author, _fit("作者：" + author, 0.038)))
+
+    gap = max(4, int(W * 0.012))
+    bboxes = [(t, f, f.getbbox(t)) for t, f in lines]
+    text_h = sum(b[3] - b[1] for _, _, b in bboxes) + gap * (len(bboxes) - 1)
+    band_h = text_h + pad * 2
+
+    parchment = (239, 226, 196)
+    band = Image.new("RGB", (W, band_h), parchment)
+    d = ImageDraw.Draw(band)
+    y = pad
+    for t, f, b in bboxes:
+        w = b[2] - b[0]
+        d.text(((W - w) // 2 - b[0], y - b[1]), t, fill=(58, 42, 23), font=f)
+        y += (b[3] - b[1]) + gap
+    d.line([(0, band_h - 1), (W, band_h - 1)], fill=(123, 45, 38), width=max(2, int(W * 0.004)))
+
+    out = Image.new("RGB", (W, band_h + H), parchment)
+    out.paste(band, (0, 0))
+    out.paste(base, (0, band_h))
+    return out
