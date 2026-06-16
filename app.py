@@ -24,13 +24,14 @@ from processor import (
     process_image,
 )
 
-def _font_data_uri() -> str:
-    """Embed the subset Yusei Magic woff2 so it loads same-origin (no raw.github)."""
-    f = Path(__file__).parent / "assets" / "uifont.woff2"
+def _font_data_uri(name: str) -> str:
+    """Embed a subset woff2 same-origin (no external CDN)."""
+    f = Path(__file__).parent / "assets" / name
     return "data:font/woff2;base64," + base64.b64encode(f.read_bytes()).decode()
 
 
-FONT_URL = _font_data_uri()
+FONT_URL = _font_data_uri("uifont.woff2")               # Yusei Magic (primary, magic look)
+FONT_URL_FB = _font_data_uri("uifont-fallback.woff2")   # 粉圓: covers Traditional glyphs Yusei lacks
 
 st.set_page_config(
     page_title="預言家日報・防窺工坊",
@@ -52,7 +53,7 @@ use_magic_font = st.toggle(
 )
 
 title_font_family = (
-    "'YuseiMagic', serif"
+    "'YuseiMagic', 'HuninnUI', serif"
     if use_magic_font
     else 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
 )
@@ -65,6 +66,12 @@ if use_magic_font:
         font-display: swap;
     }}
 
+    @font-face {{
+        font-family: 'HuninnUI';
+        src: url('{FONT_URL_FB}') format('woff2');
+        font-display: swap;
+    }}
+
     html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMarkdownContainer"],
     h1, h2, h3, h4, h5, h6, p, label, button, input, textarea, select,
     .stButton button, [data-testid="stWidgetLabel"], .scroll-note,
@@ -74,7 +81,7 @@ if use_magic_font:
     div[role="option"], div[role="option"] *,
     ul[data-testid="stVirtualDropdown"], ul[data-testid="stVirtualDropdown"] *,
     li[data-testid="stVirtualDropdownOption"], li[data-testid="stVirtualDropdownOption"] * {{
-        font-family: 'YuseiMagic', serif !important;
+        font-family: 'YuseiMagic', 'HuninnUI', serif !important;
     }}
     """
 else:

@@ -95,10 +95,16 @@ Path("/tmp/subset.txt").write_text("".join(sorted(chars)), "utf-8")
 PY
 pyftsubset assets/YuseiMagic-Regular-2.ttf --text-file=/tmp/subset.txt \
   --flavor=woff2 --output-file=assets/uifont.woff2 --layout-features='*' --desubroutinize
+# fallback (粉圓) — covers Traditional glyphs Yusei Magic is missing (你/每/啟/…)
+pyftsubset <jf-openhuninn.ttf> --text-file=/tmp/subset.txt \
+  --flavor=woff2 --output-file=assets/uifont-fallback.woff2 --layout-features='*' --desubroutinize
 ```
 
-> Yusei Magic is a Japanese font; it covers our Traditional-Chinese glyphs but not
-> Simplified ones — keep UI text Traditional. Verify coverage with `fontTools`.
+> Yusei Magic is a Japanese font and lacks several common Traditional characters,
+> so the CSS font stack is `'YuseiMagic', 'HuninnUI', serif`: Yusei for the glyphs
+> it has, **粉圓 (`uifont-fallback.woff2`)** for the rest — no serif tofu.
+> **Regenerate BOTH subsets whenever UI text changes.** Verify combined coverage
+> with `fontTools` (every UI CJK char should be in one woff2 or the other).
 
 - **Title-band font:** `assets/band-font.otf` (Noto Sans CJK, OFL) — used only
   server-side to draw the credit band, so its 16 MB never reaches the browser. It
