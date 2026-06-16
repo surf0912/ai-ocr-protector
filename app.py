@@ -6,7 +6,9 @@ tapping the sidebar arrow. Flow: 設定 → 上傳 → 自動處理 → 下載 /
 
 from __future__ import annotations
 
+import base64
 import io
+from pathlib import Path
 
 import streamlit as st
 from PIL import Image
@@ -24,22 +26,30 @@ st.set_page_config(
     layout="centered", initial_sidebar_state="collapsed",
 )
 
-# Parchment look: warm color + radial vignette + faint paper-grain noise,
-# plus a custom "scroll card" style for notices (instead of blue/yellow alerts).
+# Parchment background from a real paper texture (embedded as base64 so it always
+# loads on Streamlit Cloud), plus custom "scroll card" notices.
+@st.cache_data
+def _parchment_data_uri() -> str:
+    img = Path(__file__).parent / "assets" / "parchment.jpg"
+    return "data:image/jpeg;base64," + base64.b64encode(img.read_bytes()).decode()
+
+
 st.markdown(
     """
     <style>
     .stApp {
         background-color: #EFE2C4;
         background-image:
-            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.06'/%3E%3C/svg%3E"),
-            radial-gradient(at 50% 0%, rgba(255,250,235,0.55), rgba(0,0,0,0) 70%),
-            radial-gradient(at 100% 100%, rgba(150,110,60,0.22), rgba(0,0,0,0) 60%),
-            radial-gradient(at 0% 100%, rgba(150,110,60,0.18), rgba(0,0,0,0) 60%);
+            linear-gradient(rgba(244,234,208,0.30), rgba(244,234,208,0.30)),
+            url("__BG__");
+        background-size: cover;
+        background-position: center;
         background-attachment: fixed;
+        background-repeat: no-repeat;
     }
+    [data-testid="stHeader"] { background: transparent; }
     .scroll-note {
-        background-color: #E9D8AE;
+        background-color: rgba(233,216,174,0.90);
         border: 1px solid #C2A867;
         border-left: 5px solid #7B2D26;
         border-radius: 6px;
@@ -49,9 +59,9 @@ st.markdown(
         line-height: 1.75;
     }
     .scroll-note .scroll-title { font-weight: 700; margin-bottom: 0.35rem; }
-    .scroll-note.warn { border-left-color: #9A6B1F; background-color: #ECDDB0; }
+    .scroll-note.warn { border-left-color: #9A6B1F; background-color: rgba(236,221,176,0.90); }
     </style>
-    """,
+    """.replace("__BG__", _parchment_data_uri()),
     unsafe_allow_html=True,
 )
 
