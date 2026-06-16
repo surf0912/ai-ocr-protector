@@ -125,9 +125,9 @@ st.markdown(
 SUPPORTED = ["jpg", "jpeg", "png", "webp"]
 
 PRESET_LABELS = {
-    "Standard": "標準",
+    "Standard": "标准",
     "Maximum": "重度",
-    "Extreme": "極限",
+    "Extreme": "极限",
 }
 
 
@@ -142,8 +142,13 @@ def _run(data: bytes, cfg_dict: dict, jpg_quality: int) -> bytes:
 # --------------------------------------------------------------------------- #
 # Controls — all on the main page (mobile friendly)
 # --------------------------------------------------------------------------- #
+preset_options = list(PRESETS.keys())
+default_preset = "Maximum" if "Maximum" in preset_options else preset_options[0]
+
 preset_name = st.selectbox(
-    "咒語強度", list(PRESETS.keys()), index=len(PRESETS) - 1,  # 預設「極限」
+    "咒語強度",
+    preset_options,
+    index=preset_options.index(default_preset),  # 預設「重度」
     format_func=lambda k: PRESET_LABELS.get(k, k),
 )
 
