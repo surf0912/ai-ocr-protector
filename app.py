@@ -83,12 +83,12 @@ def _parchment_data_uri() -> str:
 
 @st.cache_data
 def _font_data_uri() -> str:
-    f = Path(__file__).parent / "assets" / "uifont.woff2"
-    return "data:font/woff2;base64," + base64.b64encode(f.read_bytes()).decode()
+    f = Path(__file__).parent / "assets" / "YuseiMagic-Regular-2.ttf"
+    return "data:font/ttf;base64," + base64.b64encode(f.read_bytes()).decode()
 
 
 use_magic_font = st.toggle(
-    "魔法字體",
+    "使用魔法字體",
     value=True,
     help="關閉後會改用系統預設字體，閱讀性比較穩定。",
 )
@@ -96,8 +96,8 @@ use_magic_font = st.toggle(
 title_font_face_css = (
     f"""
     @font-face {{
-        font-family: 'TitleXiaoDou';
-        src: url('{_font_data_uri()}') format('woff2');
+        font-family: 'TitleYuseiMagic';
+        src: url('{_font_data_uri()}') format('truetype');
         font-display: swap;
     }}
     """
@@ -106,7 +106,7 @@ title_font_face_css = (
 )
 
 title_font_family = (
-    "'TitleXiaoDou', serif"
+    "'TitleYuseiMagic', serif"
     if use_magic_font
     else 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
 )
@@ -114,8 +114,8 @@ title_font_family = (
 if use_magic_font:
     font_css = """
     @font-face {
-        font-family: 'XiaoDou';
-        src: url("__FONT__") format('woff2');
+        font-family: 'YuseiMagic';
+        src: url("__FONT__") format('truetype');
         font-display: swap;
     }
 
@@ -128,7 +128,7 @@ if use_magic_font:
     div[role="option"], div[role="option"] *,
     ul[data-testid="stVirtualDropdown"], ul[data-testid="stVirtualDropdown"] *,
     li[data-testid="stVirtualDropdownOption"], li[data-testid="stVirtualDropdownOption"] * {
-        font-family: 'XiaoDou', serif !important;
+        font-family: 'YuseiMagic', serif !important;
     }
     """
 else:
