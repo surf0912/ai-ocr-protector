@@ -40,6 +40,41 @@ def _font_data_uri() -> str:
     return "data:font/woff2;base64," + base64.b64encode(f.read_bytes()).decode()
 
 
+use_magic_font = st.toggle("使用魔法字體", value=True, help="關閉後會改用系統預設字體，閱讀性比較穩定。")
+
+font_css = """
+    @font-face {
+        font-family: 'XiaoDou';
+        src: url("__FONT__") format('woff2');
+        font-display: swap;
+    }
+
+    html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMarkdownContainer"],
+    h1, h2, h3, h4, h5, h6, p, label, button, input, textarea, select,
+    .stButton button, [data-testid="stWidgetLabel"], .scroll-note,
+    div[data-baseweb="select"], div[data-baseweb="select"] *,
+    div[data-baseweb="popover"], div[data-baseweb="popover"] *,
+    div[role="listbox"], div[role="listbox"] *,
+    div[role="option"], div[role="option"] *,
+    ul[data-testid="stVirtualDropdown"], ul[data-testid="stVirtualDropdown"] *,
+    li[data-testid="stVirtualDropdownOption"], li[data-testid="stVirtualDropdownOption"] * {
+        font-family: 'XiaoDou', serif !important;
+    }
+""" if use_magic_font else """
+    html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMarkdownContainer"],
+    h1, h2, h3, h4, h5, h6, p, label, button, input, textarea, select,
+    .stButton button, [data-testid="stWidgetLabel"], .scroll-note,
+    div[data-baseweb="select"], div[data-baseweb="select"] *,
+    div[data-baseweb="popover"], div[data-baseweb="popover"] *,
+    div[role="listbox"], div[role="listbox"] *,
+    div[role="option"], div[role="option"] *,
+    ul[data-testid="stVirtualDropdown"], ul[data-testid="stVirtualDropdown"] *,
+    li[data-testid="stVirtualDropdownOption"], li[data-testid="stVirtualDropdownOption"] * {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif !important;
+    }
+"""
+
+
 st.markdown(
     """
     <style>
@@ -54,32 +89,7 @@ st.markdown(
         background-repeat: no-repeat;
     }
     [data-testid="stHeader"] { background: transparent; }
-    @font-face {
-        font-family: 'XiaoDou';
-        src: url("__FONT__") format('woff2');
-        font-display: swap;
-    }
-    html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMarkdownContainer"],
-    h1, h2, h3, h4, h5, h6, p, label, button, input, textarea, select,
-    .stButton button, [data-testid="stWidgetLabel"], .scroll-note {
-        font-family: 'XiaoDou', serif !important;
-    }
-
-    /* Force the custom font into Streamlit / BaseWeb selectbox and dropdown menu. */
-    div[data-baseweb="select"],
-    div[data-baseweb="select"] *,
-    div[data-baseweb="popover"],
-    div[data-baseweb="popover"] *,
-    div[role="listbox"],
-    div[role="listbox"] *,
-    div[role="option"],
-    div[role="option"] *,
-    ul[data-testid="stVirtualDropdown"],
-    ul[data-testid="stVirtualDropdown"] *,
-    li[data-testid="stVirtualDropdownOption"],
-    li[data-testid="stVirtualDropdownOption"] * {
-        font-family: 'XiaoDou', serif !important;
-    }
+    __FONT_CSS__
     [data-testid="stIconMaterial"], .material-icons, .material-icons-outlined,
     .material-icons-rounded {
         font-family: 'Material Symbols Rounded','Material Symbols Outlined','Material Icons' !important;
@@ -97,7 +107,7 @@ st.markdown(
     .scroll-note .scroll-title { font-weight: 700; margin-bottom: 0.35rem; }
     .scroll-note.warn { border-left-color: #9A6B1F; background-color: rgba(236,221,176,0.90); }
     </style>
-    """.replace("__BG__", _parchment_data_uri()).replace("__FONT__", _font_data_uri()),
+    """.replace("__BG__", _parchment_data_uri()).replace("__FONT_CSS__", font_css).replace("__FONT__", _font_data_uri()),
     unsafe_allow_html=True,
 )
 
