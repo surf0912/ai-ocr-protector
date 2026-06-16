@@ -301,51 +301,67 @@ cfg = ProtectionConfig(
     blur_radius=blur_radius,
 )
 
-uploaded = st.file_uploader("獻上卷軸", type=SUPPORTED, accept_multiple_files=False)
+uploaded_files = st.file_uploader(
+    "獻上卷軸（可一次多張）", type=SUPPORTED, accept_multiple_files=True
+)
 
-if uploaded is None:
+if not uploaded_files:
     st.markdown(
-        '<div class="scroll-note">⬆️ 上傳 JPG、PNG 或 WEBP，上傳後會自動處理。</div>',
+        '<div class="scroll-note">⬆️ 上傳 JPG、PNG 或 WEBP（可多選），上傳後會自動處理。</div>',
         unsafe_allow_html=True,
     )
     st.stop()
 
-data = uploaded.getvalue()
+# Process every uploaded image (sequential, so memory stays bounded).
+results = []  # (name, raw_bytes, protected_bytes, (w, h))
+progress = st.progress(0.0) if len(uploaded_files) > 1 else None
+for i, uf in enumerate(uploaded_files):
+    raw = uf.getvalue()
+    try:
+        im = Image.open(io.BytesIO(raw))
+        im.load()
+    except Exception as exc:
+        st.error(f"無法讀取「{uf.name}」：{exc}")
+        continue
+    with st.spinner(f"揮舞魔杖中…（{i + 1}/{len(uploaded_files)}）"):
+        protected = _run(raw, cfg.to_dict(), jpg_quality)
+    results.append((uf.name, raw, protected, im.size))
+    if progress:
+        progress.progress((i + 1) / len(uploaded_files))
+if progress:
+    progress.empty()
 
-try:
-    original = Image.open(io.BytesIO(data))
-    original.load()
-except Exception as exc:
-    st.error(f"無法讀取這張圖片：{exc}")
+if not results:
     st.stop()
 
-megapixels = (original.width * original.height) / 1_000_000
-if megapixels > 24:
-    st.warning(f"圖片較大({megapixels:.0f} MP)——處理可能需要幾秒。")
-
-with st.spinner("揮舞魔杖中…"):
-    result_bytes = _run(data, cfg.to_dict(), jpg_quality)
-
-stem = uploaded.name.rsplit(".", 1)[0]
-st.download_button(
-    "速速前！取回卷軸——Accio!",
-    data=result_bytes,
-    file_name=f"{stem}_protected.jpg",
-    mime="image/jpeg",
-    type="primary",
-    use_container_width=True,
-)
-
 st.subheader("施咒後")
-st.image(result_bytes, use_container_width=True)
-st.caption(
-    f"{original.width} × {original.height}px · JPG · "
-    f"{len(result_bytes) / 1_000_000:.1f} MB · 尺寸已保留"
-)
-
-with st.expander("窺看原貌"):
-    st.image(data, use_container_width=True)
-    st.caption(
-        f"{original.width} × {original.height}px · "
-        f"{original.format or uploaded.type} · {len(data) / 1_000_000:.1f} MB"
+if len(results) > 1:
+    st.markdown(
+        f'<div class="scroll-note">📥 共 {len(results)} 張。逐張點下方按鈕即可儲存'
+        "（免解壓縮，直接存成 JPG）。</div>",
+        unsafe_allow_html=True,
     )
+
+# All download buttons grouped together so you can tap through them quickly.
+for idx, (name, raw, protected, size) in enumerate(results):
+    stem = name.rsplit(".", 1)[0]
+    st.download_button(
+        f"速速前！取回「{stem}」",
+        data=protected,
+        file_name=f"{stem}_protected.jpg",
+        mime="image/jpeg",
+        type="primary",
+        use_container_width=True,
+        key=f"dl_{idx}",
+    )
+
+# Previews below (single image opens expanded).
+for idx, (name, raw, protected, size) in enumerate(results):
+    with st.expander(f"預覽「{name}」", expanded=(len(results) == 1)):
+        st.image(protected, use_container_width=True)
+        st.caption(
+            f"{size[0]} × {size[1]}px · JPG · "
+            f"{len(protected) / 1_000_000:.1f} MB · 尺寸已保留"
+        )
+        st.markdown("**原貌**")
+        st.image(raw, use_container_width=True)
