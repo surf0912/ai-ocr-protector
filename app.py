@@ -20,16 +20,16 @@ from processor import (
 )
 
 st.set_page_config(
-    page_title="圖片保護工具", page_icon="🛡️",
+    page_title="麻瓜驅逐咒", page_icon="🪄",
     layout="centered", initial_sidebar_state="collapsed",
 )
 
-st.title("🛡️ 圖片保護工具")
+st.title("🪄 麻瓜驅逐咒")
 
 st.info(
-    "📌 **使用提醒**\n\n"
-    "- 請上傳「**正向原圖**」,處理後輸出會是**顛倒+鏡像**的版本。\n"
-    "- **不要把已處理過(顛倒)的圖再上傳**,保護就失效了。"
+    "📜 **施咒須知**\n\n"
+    "・請獻上「正向的原始卷軸」,施咒後將呈顛倒鏡像之貌。\n\n"
+    "・切勿將已施咒的卷軸重複投入,咒語會相互抵銷、護法盡失。"
 )
 
 SUPPORTED = ["jpg", "jpeg", "png", "webp"]
@@ -53,13 +53,13 @@ def _run(data: bytes, cfg_dict: dict, jpg_quality: int) -> bytes:
 # Controls — all on the main page (mobile friendly)
 # --------------------------------------------------------------------------- #
 preset_name = st.selectbox(
-    "保護強度", list(PRESETS.keys()), index=len(PRESETS) - 1,  # 預設「極限」
+    "咒語強度", list(PRESETS.keys()), index=len(PRESETS) - 1,  # 預設「極限」
     format_func=lambda k: PRESET_LABELS.get(k, k),
 )
 
-flip_output = st.checkbox("輸出時旋轉 180° + 鏡像", value=True)
+flip_output = st.checkbox("施展顛倒咒(旋轉+鏡像)", value=True)
 
-with st.expander("進階設定(可選)"):
+with st.expander("進階魔法"):
     base = config_from_preset(preset_name)
 
     jpg_quality = st.slider("JPG 品質", 60, 100, 92, 1,
@@ -114,7 +114,7 @@ cfg = ProtectionConfig(
 # --------------------------------------------------------------------------- #
 # Upload -> auto-process -> download -> preview
 # --------------------------------------------------------------------------- #
-uploaded = st.file_uploader("上傳圖片", type=SUPPORTED, accept_multiple_files=False)
+uploaded = st.file_uploader("獻上你的卷軸", type=SUPPORTED, accept_multiple_files=False)
 
 if uploaded is None:
     st.info("⬆️ 上傳 JPG、PNG 或 WEBP,上傳後會自動處理。")
@@ -133,12 +133,12 @@ megapixels = (original.width * original.height) / 1_000_000
 if megapixels > 24:
     st.warning(f"圖片較大({megapixels:.0f} MP)——處理可能需要幾秒。")
 
-with st.spinner("自動處理中…"):
+with st.spinner("揮舞魔杖中…"):
     result_bytes = _run(data, cfg.to_dict(), jpg_quality)
 
 stem = uploaded.name.rsplit(".", 1)[0]
 st.download_button(
-    "⬇️ 下載保護後的圖片",
+    "速速前!取回卷軸(Accio)",
     data=result_bytes,
     file_name=f"{stem}_protected.jpg",
     mime="image/jpeg",
@@ -146,14 +146,14 @@ st.download_button(
     use_container_width=True,
 )
 
-st.subheader("保護後")
+st.subheader("施咒後")
 if flip_output:
     st.warning("⚠️ 下圖是**顛倒+鏡像**的,這是正常的。閱讀時把圖**上下翻轉(垂直翻轉)**即可完全還原。")
 st.image(result_bytes, use_container_width=True)
 st.caption(f"{original.width} × {original.height}px · JPG · "
            f"{len(result_bytes) / 1_000_000:.1f} MB · 尺寸已保留")
 
-with st.expander("查看原圖"):
+with st.expander("窺看原貌"):
     st.image(data, use_container_width=True)
     st.caption(f"{original.width} × {original.height}px · "
                f"{original.format or uploaded.type} · {len(data) / 1_000_000:.1f} MB")
