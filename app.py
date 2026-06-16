@@ -28,8 +28,8 @@ st.title("🪄 麻瓜驅逐咒")
 
 st.info(
     "📜 **施咒須知**\n\n"
-    "・請獻上「正向的原始卷軸」,施咒後將呈顛倒鏡像之貌。\n\n"
-    "・切勿將已施咒的卷軸重複投入,咒語會相互抵銷、護法盡失。"
+    "・請獻上「正向的原始卷軸」，施咒後將呈顛倒鏡像之貌。\n\n"
+    "・切勿將已施咒的卷軸重複投入，咒語會相互抵銷、護法盡失。"
 )
 
 SUPPORTED = ["jpg", "jpeg", "png", "webp"]
@@ -57,20 +57,20 @@ preset_name = st.selectbox(
     format_func=lambda k: PRESET_LABELS.get(k, k),
 )
 
-flip_output = st.checkbox("施展顛倒咒(旋轉+鏡像)", value=True)
+flip_output = st.checkbox("施展顛倒咒（旋轉+鏡像）", value=True)
 
 with st.expander("進階魔法"):
     base = config_from_preset(preset_name)
 
     jpg_quality = st.slider("JPG 品質", 60, 100, 92, 1,
-                            help="數字越低檔案越小;92 是不錯的平衡。")
+                            help="數字越低檔案越小；92 是不錯的平衡。")
 
-    st.markdown("**微形變 (Micro-warp)** — 打散字形,抗 AI 的關鍵之一")
+    st.markdown("**微形變 (Micro-warp)** — 打散字形，抗 AI 的關鍵之一")
     warp_enabled = st.checkbox("啟用微形變", value=base.warp_enabled)
     warp_amplitude = st.slider("形變強度 (px)", 0.0, 15.0, float(base.warp_amplitude), 0.5,
-                               help="越大越能干擾,但扭曲越明顯。")
+                               help="越大越能干擾，但扭曲越明顯。")
 
-    st.markdown("**干擾遮罩** — 對 AI 最有效,但看得見")
+    st.markdown("**干擾遮罩** — 對 AI 最有效，但看得見")
     mask_enabled = st.checkbox("啟用遮罩", value=base.mask_enabled)
     mask_opacity = st.slider("遮罩不透明度", 0.03, 0.40, float(base.mask_opacity), 0.01)
     col_a, col_b, col_c = st.columns(3)
@@ -86,7 +86,7 @@ with st.expander("進階魔法"):
     st.markdown("**雜訊 / 模糊**")
     noise_enabled = st.checkbox("啟用高斯雜訊", value=base.noise_enabled)
     noise_sigma = st.slider("雜訊強度 (σ)", 0.0, 20.0, float(base.noise_sigma), 0.5)
-    blur_enabled = st.checkbox("輕微模糊(會降低可讀性)", value=base.blur_enabled)
+    blur_enabled = st.checkbox("輕微模糊（會降低可讀性）", value=base.blur_enabled)
     blur_radius = st.slider("模糊半徑 (px)", 0.0, 1.0, float(base.blur_radius), 0.1)
 
 cfg = ProtectionConfig(
@@ -117,7 +117,7 @@ cfg = ProtectionConfig(
 uploaded = st.file_uploader("獻上你的卷軸", type=SUPPORTED, accept_multiple_files=False)
 
 if uploaded is None:
-    st.info("⬆️ 上傳 JPG、PNG 或 WEBP,上傳後會自動處理。")
+    st.info("⬆️ 上傳 JPG、PNG 或 WEBP，上傳後會自動處理。")
     st.stop()
 
 data = uploaded.getvalue()
@@ -126,7 +126,7 @@ try:
     original = Image.open(io.BytesIO(data))
     original.load()
 except Exception as exc:  # noqa: BLE001
-    st.error(f"無法讀取這張圖片:{exc}")
+    st.error(f"無法讀取這張圖片：{exc}")
     st.stop()
 
 megapixels = (original.width * original.height) / 1_000_000
@@ -138,7 +138,7 @@ with st.spinner("揮舞魔杖中…"):
 
 stem = uploaded.name.rsplit(".", 1)[0]
 st.download_button(
-    "速速前!取回卷軸(Accio)",
+    "速速前！取回卷軸(Accio)",
     data=result_bytes,
     file_name=f"{stem}_protected.jpg",
     mime="image/jpeg",
@@ -148,7 +148,7 @@ st.download_button(
 
 st.subheader("施咒後")
 if flip_output:
-    st.warning("⚠️ 下圖是**顛倒+鏡像**的,這是正常的。閱讀時把圖**上下翻轉(垂直翻轉)**即可完全還原。")
+    st.warning("⚠️ 下圖是**顛倒+鏡像**的，這是正常的。閱讀時把圖**上下翻轉（垂直翻轉）**即可完全還原。")
 st.image(result_bytes, use_container_width=True)
 st.caption(f"{original.width} × {original.height}px · JPG · "
            f"{len(result_bytes) / 1_000_000:.1f} MB · 尺寸已保留")
