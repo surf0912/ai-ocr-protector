@@ -1,8 +1,9 @@
-"""Streamlit UI for the Automated AI/OCR Protection Image Processor.
+"""Streamlit UI for the AI / OCR Protection Image Processor.
 
 Flow:  Upload  ->  Process automatically  ->  Preview  ->  Download
-The user only has to drop a file in and click download; everything in between
-runs without manual editing. Controls are optional refinements.
+Goal: confuse AI / OCR while keeping the image readable to humans. The default
+("Stealth") is tuned for near-zero human-visible impact. You only have to upload
+and download; the controls are optional.
 """
 
 from __future__ import annotations
@@ -24,17 +25,14 @@ st.set_page_config(page_title="AI / OCR Protection Processor", page_icon="🛡�
 
 st.title("🛡️ AI / OCR Protection Image Processor")
 st.caption(
-    "Upload an image (usually a screenshot or text-heavy image). It is automatically "
-    "transformed to be harder for OCR and multimodal AI to read or train on, while "
-    "staying understandable to a human. No manual editing required."
+    "Upload an image. It is automatically processed to be harder for OCR and "
+    "multimodal AI to read or train on, while staying readable to a human. "
+    "Works with any image size. No manual editing required."
 )
 
 SUPPORTED = ["jpg", "jpeg", "png", "webp"]
 
 
-# --------------------------------------------------------------------------- #
-# Cached processing so moving sliders is snappy
-# --------------------------------------------------------------------------- #
 @st.cache_data(show_spinner=False)
 def _run(data: bytes, cfg_dict: dict, out_format: str) -> bytes:
     cfg = ProtectionConfig(**cfg_dict)
@@ -50,8 +48,9 @@ with st.sidebar:
     st.header("Protection settings")
 
     preset_name = st.selectbox(
-        "Preset", list(PRESETS.keys()), index=1,
-        help="Light = subtle, Strong = most disruptive. Start with Medium.",
+        "Preset", list(PRESETS.keys()), index=0,
+        help="Stealth = practically invisible to the eye. Maximum = most "
+             "disruptive but you can tell it was processed.",
     )
     out_format = st.radio("Output format", ["PNG", "JPG"], horizontal=True)
 
@@ -59,40 +58,44 @@ with st.sidebar:
         st.caption("Override the preset. Defaults follow the chosen preset.")
         base = config_from_preset(preset_name)
 
-        rotate_180 = st.checkbox("Rotate 180°", value=base.rotate_180)
-        flip_horizontal = st.checkbox("Flip horizontally", value=base.flip_horizontal)
-
-        st.markdown("**OCR-disruption mask**")
-        mask_enabled = st.checkbox("Enable mask", value=base.mask_enabled)
-        mask_opacity = st.slider(
-            "Mask opacity", 0.05, 0.30, float(base.mask_opacity), 0.01
+        st.markdown("**Micro-warp** — low human impact, main anti-OCR effect")
+        warp_enabled = st.checkbox("Enable micro-warp", value=base.warp_enabled)
+        warp_amplitude = st.slider(
+            "Warp strength (px)", 0.0, 6.0, float(base.warp_amplitude), 0.1,
+            help="Higher = more OCR disruption but more visible distortion.",
         )
+
+        st.markdown("**Noise**")
+        noise_enabled = st.checkbox("Enable Gaussian noise", value=base.noise_enabled)
+        noise_sigma = st.slider("Noise intensity (σ)", 0.0, 20.0, float(base.noise_sigma), 0.5)
+
+        st.markdown("**Disruption overlay** — visible; off for max readability")
+        mask_enabled = st.checkbox("Enable overlay mask", value=base.mask_enabled)
+        mask_opacity = st.slider("Mask opacity", 0.03, 0.25, float(base.mask_opacity), 0.01)
         col_a, col_b = st.columns(2)
         with col_a:
             use_diagonal = st.checkbox("Diagonal", value=base.use_diagonal)
             use_grid = st.checkbox("Fine grid", value=base.use_grid)
         with col_b:
             use_crosshatch = st.checkbox("Cross-hatch", value=base.use_crosshatch)
-        spacing = st.slider(
-            "Line spacing (px)", 6, 30,
-            (base.spacing_min, base.spacing_max),
-        )
-        line_width = st.slider(
-            "Line width (px)", 1, 4, (base.line_width_min, base.line_width_max)
-        )
+        spacing = st.slider("Line spacing (px @1000px)", 6, 30,
+                            (base.spacing_min, base.spacing_max))
+        line_width = st.slider("Line width (px)", 1, 4,
+                               (base.line_width_min, base.line_width_max))
 
-        st.markdown("**Noise**")
-        noise_enabled = st.checkbox("Enable Gaussian noise", value=base.noise_enabled)
-        noise_sigma = st.slider("Noise intensity (σ)", 0.0, 30.0, float(base.noise_sigma), 0.5)
-
-        st.markdown("**Blur (optional)**")
-        blur_enabled = st.checkbox("Enable slight blur", value=base.blur_enabled)
+        st.markdown("**High human-impact options** (off by default)")
+        st.caption("⚠️ These noticeably affect human reading — use only if needed.")
+        rotate_180 = st.checkbox("Rotate 180°", value=base.rotate_180)
+        flip_horizontal = st.checkbox("Flip horizontally", value=base.flip_horizontal)
+        blur_enabled = st.checkbox("Slight blur", value=base.blur_enabled)
         blur_radius = st.slider("Blur radius (px)", 0.0, 1.0, float(base.blur_radius), 0.1)
 
-    # Build the effective config from the controls.
     cfg = ProtectionConfig(
-        rotate_180=rotate_180,
-        flip_horizontal=flip_horizontal,
+        warp_enabled=warp_enabled,
+        warp_amplitude=warp_amplitude,
+        warp_cell=base.warp_cell,
+        noise_enabled=noise_enabled,
+        noise_sigma=noise_sigma,
         mask_enabled=mask_enabled,
         mask_opacity=mask_opacity,
         line_width_min=line_width[0],
@@ -102,8 +105,8 @@ with st.sidebar:
         use_diagonal=use_diagonal,
         use_crosshatch=use_crosshatch,
         use_grid=use_grid,
-        noise_enabled=noise_enabled,
-        noise_sigma=noise_sigma,
+        rotate_180=rotate_180,
+        flip_horizontal=flip_horizontal,
         blur_enabled=blur_enabled,
         blur_radius=blur_radius,
     )
@@ -112,9 +115,7 @@ with st.sidebar:
 # --------------------------------------------------------------------------- #
 # Main: upload -> auto-process -> preview -> download
 # --------------------------------------------------------------------------- #
-uploaded = st.file_uploader(
-    "Upload an image", type=SUPPORTED, accept_multiple_files=False
-)
+uploaded = st.file_uploader("Upload an image", type=SUPPORTED, accept_multiple_files=False)
 
 if uploaded is None:
     st.info("⬆️ Upload a JPG, PNG, or WEBP to begin. Processing starts automatically.")
@@ -128,6 +129,10 @@ try:
 except Exception as exc:  # noqa: BLE001
     st.error(f"Could not read that image: {exc}")
     st.stop()
+
+megapixels = (original.width * original.height) / 1_000_000
+if megapixels > 24:
+    st.warning(f"Large image ({megapixels:.0f} MP) — processing may take a few seconds.")
 
 with st.spinner("Processing automatically…"):
     result_bytes = _run(data, cfg.to_dict(), out_format)
@@ -152,18 +157,22 @@ st.download_button(
     type="primary",
 )
 
-with st.expander("How does this work / is it readable?"):
+with st.expander("How it works & honest limitations"):
     st.markdown(
         """
-- **Rotate 180° + flip horizontally** changes the geometry so models that expect
-  upright, correctly-oriented text have to work harder; a human can still reorient it.
-- **OCR-disruption mask** lays randomized diagonal, cross-hatch and fine-grid lines
-  over the text. The randomization (jittered spacing, width, grey value and alpha)
-  makes it hard to remove with a single notch/frequency filter.
-- **Gaussian noise** breaks up the clean edges character recognition relies on.
-- **Optional slight blur** softens glyph boundaries a touch more.
+**Default (Stealth) — tuned for near-zero human-visible impact:**
+- **Micro-warp**: a smooth 1–2px displacement field gently distorts glyph
+  geometry. OCR character recognition and image embeddings degrade; the eye
+  barely notices because overall shapes are preserved.
+- **Light noise**: low-amplitude Gaussian noise disturbs the clean edges OCR
+  relies on.
 
-This *reduces* extraction accuracy rather than guaranteeing zero extraction.
-Use the **Strong** preset for maximum disruption, **Light** if readability matters most.
+**Stronger presets** add a faint line overlay (and you can enable rotate/flip/blur
+manually), trading some human readability for more disruption.
+
+**Honest limitation:** no transform is both invisible to humans *and* able to
+reliably defeat modern robust multimodal models. Subtle perturbations can also be
+weakened by re-screenshotting or re-compressing the protected image. Use **Maximum**
+when you need the strongest effect and can accept that it looks processed.
         """
     )
