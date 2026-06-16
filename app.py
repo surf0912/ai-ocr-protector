@@ -11,7 +11,6 @@ import io
 from pathlib import Path
 
 import streamlit as st
-import streamlit.components.v1 as components
 from PIL import Image
 
 from processor import (
@@ -22,7 +21,13 @@ from processor import (
     process_image,
 )
 
-FONT_URL = "https://raw.githubusercontent.com/surf0912/ai-ocr-protector/main/assets/YuseiMagic-Regular-2.ttf"
+def _font_data_uri() -> str:
+    """Embed the subset Yusei Magic woff2 so it loads same-origin (no raw.github)."""
+    f = Path(__file__).parent / "assets" / "uifont.woff2"
+    return "data:font/woff2;base64," + base64.b64encode(f.read_bytes()).decode()
+
+
+FONT_URL = _font_data_uri()
 
 st.set_page_config(
     page_title="預言家日報・防窺工坊",
@@ -30,52 +35,6 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="collapsed",
 )
-
-components.html(
-    """
-    <script>
-    const head = window.parent.document.head;
-
-    function upsertLink(rel, href, attrs = {}) {
-        let el = head.querySelector(`link[rel="${rel}"]`);
-        if (!el) {
-            el = window.parent.document.createElement("link");
-            el.setAttribute("rel", rel);
-            head.appendChild(el);
-        }
-        el.setAttribute("href", href);
-        for (const [key, value] of Object.entries(attrs)) {
-            el.setAttribute(key, value);
-        }
-    }
-
-    function upsertMeta(name, content) {
-        let el = head.querySelector(`meta[name="${name}"]`);
-        if (!el) {
-            el = window.parent.document.createElement("meta");
-            el.setAttribute("name", name);
-            head.appendChild(el);
-        }
-        el.setAttribute("content", content);
-    }
-
-    const faviconUrl = "https://raw.githubusercontent.com/surf0912/ai-ocr-protector/main/static/favicon.png";
-    const appleIconUrl = "https://raw.githubusercontent.com/surf0912/ai-ocr-protector/main/static/apple-touch-icon.png";
-
-    upsertLink("icon", faviconUrl, {"type": "image/png"});
-    upsertLink("shortcut icon", faviconUrl, {"type": "image/png"});
-    upsertLink("apple-touch-icon", appleIconUrl, {"sizes": "180x180"});
-
-    upsertMeta("theme-color", "#8a2d2d");
-    upsertMeta("apple-mobile-web-app-capable", "yes");
-    upsertMeta("apple-mobile-web-app-title", "預言家日報・防窺工坊");
-    upsertMeta("apple-mobile-web-app-status-bar-style", "black-translucent");
-    </script>
-    """,
-    height=0,
-    width=0,
-)
-
 
 @st.cache_data
 def _parchment_data_uri() -> str:
@@ -93,7 +52,7 @@ title_font_face_css = (
     f"""
     @font-face {{
         font-family: 'TitleYuseiMagic';
-        src: url('{FONT_URL}') format('truetype');
+        src: url('{FONT_URL}') format('woff2');
         font-display: swap;
     }}
     """
@@ -111,7 +70,7 @@ if use_magic_font:
     font_css = f"""
     @font-face {{
         font-family: 'YuseiMagic';
-        src: url('{FONT_URL}') format('truetype');
+        src: url('{FONT_URL}') format('woff2');
         font-display: swap;
     }}
 
