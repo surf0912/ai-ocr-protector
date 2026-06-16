@@ -48,20 +48,8 @@ use_magic_font = st.toggle(
     help="關閉後會改用系統預設字體，會比較好讀。",
 )
 
-title_font_face_css = (
-    f"""
-    @font-face {{
-        font-family: 'TitleYuseiMagic';
-        src: url('{FONT_URL}') format('woff2');
-        font-display: swap;
-    }}
-    """
-    if use_magic_font
-    else ""
-)
-
 title_font_family = (
-    "'TitleYuseiMagic', serif"
+    "'YuseiMagic', serif"
     if use_magic_font
     else 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
 )
@@ -190,8 +178,6 @@ st.markdown(
 st.markdown(
     f"""
     <style>
-    {title_font_face_css}
-
     .title-force-font,
     .title-force-font * {{
         font-family: {title_font_family} !important;
