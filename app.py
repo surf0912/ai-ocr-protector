@@ -33,8 +33,9 @@ st.caption(
 SUPPORTED = ["jpg", "jpeg", "png", "webp"]
 
 PRESET_LABELS = {
-    "Standard": "標準(建議・能擋多數 AI,看得出處理)",
-    "Maximum": "最強(最難讀,也最難被 AI 讀)",
+    "Extreme": "極限(預設・最大化擋 AI・畫面明顯變醜、人較難讀)",
+    "Maximum": "最強(明顯處理過,較難被 AI 讀)",
+    "Standard": "標準(看得出處理,擋一般 AI/OCR)",
     "Light": "輕度(僅擋陽春 OCR,擋不住 GPT／Claude)",
 }
 
@@ -72,12 +73,12 @@ with st.expander("進階設定(可選)"):
 
     st.markdown("**微形變 (Micro-warp)** — 打散字形,抗 AI 的關鍵之一")
     warp_enabled = st.checkbox("啟用微形變", value=base.warp_enabled)
-    warp_amplitude = st.slider("形變強度 (px)", 0.0, 8.0, float(base.warp_amplitude), 0.1,
+    warp_amplitude = st.slider("形變強度 (px)", 0.0, 15.0, float(base.warp_amplitude), 0.5,
                                help="越大越能干擾,但扭曲越明顯。")
 
     st.markdown("**干擾遮罩** — 對 AI 最有效,但看得見")
     mask_enabled = st.checkbox("啟用遮罩", value=base.mask_enabled)
-    mask_opacity = st.slider("遮罩不透明度", 0.03, 0.30, float(base.mask_opacity), 0.01)
+    mask_opacity = st.slider("遮罩不透明度", 0.03, 0.40, float(base.mask_opacity), 0.01)
     col_a, col_b, col_c = st.columns(3)
     with col_a:
         use_diagonal = st.checkbox("斜線", value=base.use_diagonal)
