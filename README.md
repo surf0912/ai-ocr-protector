@@ -1,42 +1,49 @@
-# 🛡️ AI / OCR Protection Image Processor
+# 🛡️ 預言家日報・防窺工坊 — AI / OCR Protection Image Processor
 
-A web tool that automatically processes an uploaded image to make it **harder for
-OCR and multimodal AI to read or train on, while keeping it readable to a human**.
-Fully automatic — upload, then download. Works with any image size.
+Upload an image and get back a version that is **harder for OCR and multimodal AI
+to read or train on**, while a human can still recover it. Fully automatic —
+upload, then download. Works with any image size. Traditional-Chinese,
+Harry-Potter-flavoured UI.
 
-Intended for protecting your own images from being scraped and machine-extracted.
+> Intended for protecting **your own** images from being scraped / machine-extracted.
 
-## Approach (revised for "fool AI, not humans")
+## Architecture — two repositories
 
-The default is tuned for **near-zero human-visible impact**:
+| Repo | What it is | Hosting |
+|------|------------|---------|
+| **`ai-ocr-protector`** (this repo) | The Streamlit image processor (Python). The actual UI + pipeline. | Streamlit Community Cloud → `https://ai-ocr-protector.streamlit.app` |
+| **`ai-ocr-protector-mobile`** | A PWA shell (HTML/JS/service-worker) that **iframes** the Streamlit app, adds splash screen, "add to home screen", offline shell, and app icons. | GitHub Pages |
 
-1. **Micro-warp** — a smooth 1–2px displacement field gently distorts glyph
-   geometry. OCR character recognition and image embeddings degrade, while the eye
-   barely notices because overall shapes are preserved. This is the main effect.
-2. **Light Gaussian noise** — low-amplitude noise disturbs the clean edges OCR
-   relies on.
+The mobile shell is what users install on their phone. It loads
+`…streamlit.app/?embed=true` in an iframe. **PWA icons / manifest / app name live
+in the mobile repo**, not here.
 
-Stronger presets additionally add a faint line overlay, and the high-impact
-options from the original spec (**rotate 180°, horizontal flip, blur**) are still
-available as **manual, off-by-default** toggles.
+## Protection pipeline (`processor.py`)
 
-All parameters **scale with image size**, so varying photo dimensions are handled
-consistently. Every step **preserves the original pixel dimensions**.
+Applied in order; every step preserves the original pixel dimensions:
 
-| Preset | Human-visible impact | Use when |
-|--------|---------------------|----------|
-| **Stealth** (default) | practically none | you don't want to affect reading at all |
-| **Balanced** | slight texture if you look | a bit more disruption is OK |
-| **Maximum** | clearly processed, still readable | you need the strongest effect |
+1. **Rotate 180° + horizontal mirror** (default on) — scrambles orientation for
+   AI/OCR; a human flips it back. Recoverable, no information lost.
+2. **Micro-warp** — a smooth displacement field distorts glyph geometry.
+3. **Disruption mask** — randomized diagonal / cross-hatch / grid overlay.
+4. **Gaussian noise** — breaks the clean edges OCR relies on.
+5. **Optional blur** (off by default).
 
-Input: **JPG / PNG / WEBP**.  Output: **PNG** or **JPG**, same dimensions.
+Parameters scale with image size. Output is always **JPG** (PNG balloons on a
+noisy photo). Input: JPG / PNG / WEBP.
 
-## Honest limitation
+### Presets (`咒語強度`)
 
-No transform is both invisible to humans *and* able to reliably defeat modern
-robust multimodal models. Subtle perturbations can also be weakened by
-re-screenshotting or re-compressing the protected image. This **reduces**
-extraction quality and training usefulness; it is not a guarantee.
+| Preset (key) | Label | Human-readable? | Stops strong AI (GPT/Claude)? |
+|----|----|----|----|
+| `Standard` | 標準 | yes, looks processed | not reliably |
+| `Maximum` | 重度 | with effort | partly |
+| `Extreme` (default) | 極限 | hard | yes — but humans struggle too |
+
+**Honest limitation:** for clear text at readable size there is *no* setting that
+is both comfortable for humans and reliably defeats modern multimodal models —
+geometric flips don't stop them, and disruption strong enough to stop them also
+hurts human reading. Re-screenshotting / re-compressing can also weaken it.
 
 ## Run locally
 
@@ -47,45 +54,62 @@ python3 -m venv .venv
 ./.venv/bin/streamlit run app.py
 ```
 
-Opens at <http://localhost:8501>. Drop in an image; it processes automatically.
-Pick a preset, optionally tweak the advanced sliders, then **Download**.
+## Deploy
 
-## Deploy (so phone / friends abroad can use it)
+- **App:** Streamlit Community Cloud → repo `surf0912/ai-ocr-protector`, branch
+  `main`, file `app.py`. Auto-redeploys on push.
+- **Shell:** GitHub Pages on `surf0912/ai-ocr-protector-mobile` (Settings → Pages).
 
-Hosted free on **Streamlit Community Cloud**:
+## Theme & font (maintenance)
 
-1. Push this repo to GitHub (public).
-2. Go to <https://share.streamlit.io> → sign in with GitHub → **New app**.
-3. Pick the repo, branch `main`, main file `app.py` → **Deploy**.
-4. You get a permanent HTTPS URL like `https://<name>.streamlit.app` that works on
-   mobile and anywhere.
+- **Background:** `assets/parchment.jpg` (a real paper photo, optimised to 1920px)
+  is embedded as base64 in the CSS so it always loads same-origin.
+- **Font:** `小豆`→ now **Yusei Magic**. The 6 MB source TTF
+  (`assets/YuseiMagic-Regular-2.ttf`) is **subset to the glyphs the UI actually
+  uses** → `assets/uifont.woff2` (~67 KB), embedded as base64. No external CDN.
+
+Regenerate the subset after changing UI text (keeps file tiny + avoids missing
+glyphs):
+
+```bash
+python - <<'PY'
+import string; from pathlib import Path
+chars = set(Path("app.py").read_text("utf-8")) | set(string.printable) | set("0123456789")
+chars |= set("×·…—、。，！？：；「」（）『』〇±•‧σµ²³°'‘“”")
+Path("/tmp/subset.txt").write_text("".join(sorted(chars)), "utf-8")
+PY
+pyftsubset assets/YuseiMagic-Regular-2.ttf --text-file=/tmp/subset.txt \
+  --flavor=woff2 --output-file=assets/uifont.woff2 --layout-features='*' --desubroutinize
+```
+
+> Yusei Magic is a Japanese font; it covers our Traditional-Chinese glyphs but not
+> Simplified ones — keep UI text Traditional. Verify coverage with `fontTools`.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `app.py` | Streamlit UI (upload → auto-process → preview → download) |
-| `processor.py` | Pure pipeline. `process_image()`, `protect_bytes()`, presets — reusable for a future FastAPI endpoint |
-| `requirements.txt` | Dependencies |
-| `.streamlit/config.toml` | Upload size limit + theme |
+| `app.py` | Streamlit UI (parchment theme, font, controls, upload→download) |
+| `processor.py` | Pure pipeline. `process_image()`, `protect_bytes()`, presets — Streamlit-free, reusable for an API |
+| `assets/parchment.jpg` | Background texture (embedded) |
+| `assets/uifont.woff2` | Subset Yusei Magic (embedded) |
+| `assets/YuseiMagic-Regular-2.ttf` | Font source (for re-subsetting only; not served) |
+| `.streamlit/config.toml` | Upload limit + parchment theme colours |
 
-## Reuse as a library / future API
+## Reuse as a library
 
 `processor.py` has no Streamlit dependency:
 
 ```python
 from processor import protect_bytes, config_from_preset
-
-protected = protect_bytes(raw_bytes, config_from_preset("Stealth"), "JPG")
+protected = protect_bytes(raw_bytes, config_from_preset("Extreme"), "JPG")
 ```
 
-## Performance / memory
+## Performance
 
-Warp and noise run in row-strips, so a 12MP phone photo processes in ~1.5s with a
-peak of ~700MB RAM — safe on free hosting. `ProtectionConfig(seed=...)` makes
-output reproducible.
+Warp and noise run in row-strips, so a 12 MP phone photo processes in ~1.5 s with
+~700 MB peak RAM. `ProtectionConfig(seed=…)` makes output reproducible.
 
-## Future features (not yet built)
+## Future ideas
 
-Custom watermark · batch processing · PDF support · ZIP download · API endpoint.
-The processor is already structured to make these straightforward to add.
+Batch + ZIP download · redact-only-sensitive-fields mode · PDF support · API endpoint.
