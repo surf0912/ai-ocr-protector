@@ -22,8 +22,10 @@ from processor import (
     process_image,
 )
 
+FONT_URL = "https://raw.githubusercontent.com/surf0912/ai-ocr-protector/main/assets/YuseiMagic-Regular-2.ttf"
+
 st.set_page_config(
-    page_title="預言家日報・防窺工坊",
+    page_title="预言家日報・防窥工坊",
     page_icon="🪄",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -66,7 +68,7 @@ components.html(
 
     upsertMeta("theme-color", "#8a2d2d");
     upsertMeta("apple-mobile-web-app-capable", "yes");
-    upsertMeta("apple-mobile-web-app-title", "預言家日報・防窺工坊");
+    upsertMeta("apple-mobile-web-app-title", "预言家日報・防窥工坊");
     upsertMeta("apple-mobile-web-app-status-bar-style", "black-translucent");
     </script>
     """,
@@ -81,12 +83,6 @@ def _parchment_data_uri() -> str:
     return "data:image/jpeg;base64," + base64.b64encode(img.read_bytes()).decode()
 
 
-@st.cache_data
-def _font_data_uri() -> str:
-    f = Path(__file__).parent / "assets" / "YuseiMagic-Regular-2.ttf"
-    return "data:font/ttf;base64," + base64.b64encode(f.read_bytes()).decode()
-
-
 use_magic_font = st.toggle(
     "使用魔法字體",
     value=True,
@@ -97,7 +93,7 @@ title_font_face_css = (
     f"""
     @font-face {{
         font-family: 'TitleYuseiMagic';
-        src: url('{_font_data_uri()}') format('truetype');
+        src: url('{FONT_URL}') format('truetype');
         font-display: swap;
     }}
     """
@@ -112,12 +108,12 @@ title_font_family = (
 )
 
 if use_magic_font:
-    font_css = """
-    @font-face {
+    font_css = f"""
+    @font-face {{
         font-family: 'YuseiMagic';
-        src: url("__FONT__") format('truetype');
+        src: url('{FONT_URL}') format('truetype');
         font-display: swap;
-    }
+    }}
 
     html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMarkdownContainer"],
     h1, h2, h3, h4, h5, h6, p, label, button, input, textarea, select,
@@ -127,9 +123,9 @@ if use_magic_font:
     div[role="listbox"], div[role="listbox"] *,
     div[role="option"], div[role="option"] *,
     ul[data-testid="stVirtualDropdown"], ul[data-testid="stVirtualDropdown"] *,
-    li[data-testid="stVirtualDropdownOption"], li[data-testid="stVirtualDropdownOption"] * {
+    li[data-testid="stVirtualDropdownOption"], li[data-testid="stVirtualDropdownOption"] * {{
         font-family: 'YuseiMagic', serif !important;
-    }
+    }}
     """
 else:
     font_css = """
@@ -228,8 +224,7 @@ st.markdown(
     }
     </style>
     """.replace("__BG__", _parchment_data_uri())
-    .replace("__FONT_CSS__", font_css)
-    .replace("__FONT__", _font_data_uri()),
+    .replace("__FONT_CSS__", font_css),
     unsafe_allow_html=True,
 )
 
@@ -249,9 +244,9 @@ st.markdown(
 
     <div class="title-force-font">
         <h1 class="main-title">
-            <span class="title-line">預言家日報</span>
+            <span class="title-line">预言家日報</span>
             <span class="title-dot">・</span>
-            <span class="title-line">防窺工坊</span>
+            <span class="title-line">防窥工坊</span>
         </h1>
     </div>
     """,
