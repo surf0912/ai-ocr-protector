@@ -22,7 +22,7 @@ from processor import (
 )
 
 st.set_page_config(
-    page_title="預言家日報・防窺工坊", page_icon="🪄",
+    page_title="预言家日報・防窥工坊", page_icon="🪄",
     layout="centered", initial_sidebar_state="collapsed",
 )
 
@@ -85,7 +85,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.title("🪄 預言家日報・防窺工坊")
+st.title("🪄 预言家日報・防窥工坊")
 
 st.markdown(
     '<div class="scroll-note">'
@@ -99,9 +99,9 @@ st.markdown(
 SUPPORTED = ["jpg", "jpeg", "png", "webp"]
 
 PRESET_LABELS = {
-    "Standard": "標準",
+    "Standard": "标准",
     "Maximum": "重度",
-    "Extreme": "極限",
+    "Extreme": "极限",
 }
 
 
