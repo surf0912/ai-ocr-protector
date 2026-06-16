@@ -24,18 +24,32 @@ st.set_page_config(
     layout="centered", initial_sidebar_state="collapsed",
 )
 
-# Parchment background (aged-paper warmth via layered radial gradients).
+# Parchment look: warm color + radial vignette + faint paper-grain noise,
+# plus a custom "scroll card" style for notices (instead of blue/yellow alerts).
 st.markdown(
     """
     <style>
     .stApp {
         background-color: #EFE2C4;
         background-image:
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='0.06'/%3E%3C/svg%3E"),
             radial-gradient(at 50% 0%, rgba(255,250,235,0.55), rgba(0,0,0,0) 70%),
-            radial-gradient(at 100% 100%, rgba(150,110,60,0.20), rgba(0,0,0,0) 60%),
-            radial-gradient(at 0% 100%, rgba(150,110,60,0.16), rgba(0,0,0,0) 60%);
+            radial-gradient(at 100% 100%, rgba(150,110,60,0.22), rgba(0,0,0,0) 60%),
+            radial-gradient(at 0% 100%, rgba(150,110,60,0.18), rgba(0,0,0,0) 60%);
         background-attachment: fixed;
     }
+    .scroll-note {
+        background-color: #E9D8AE;
+        border: 1px solid #C2A867;
+        border-left: 5px solid #7B2D26;
+        border-radius: 6px;
+        padding: 0.85rem 1.05rem;
+        margin-bottom: 0.6rem;
+        color: #3A2A17;
+        line-height: 1.75;
+    }
+    .scroll-note .scroll-title { font-weight: 700; margin-bottom: 0.35rem; }
+    .scroll-note.warn { border-left-color: #9A6B1F; background-color: #ECDDB0; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -43,10 +57,13 @@ st.markdown(
 
 st.title("🪄 麻瓜驅逐咒")
 
-st.info(
-    "📜 **施咒須知**\n\n"
-    "・請獻上「正向的原始卷軸」，施咒後將呈顛倒鏡像之貌。\n\n"
-    "・切勿將已施咒的卷軸重複投入，咒語會相互抵銷、護法盡失。"
+st.markdown(
+    '<div class="scroll-note">'
+    '<div class="scroll-title">📜 施咒須知</div>'
+    '・請獻上「正向的原始卷軸」，施咒後將呈顛倒鏡像之貌。<br>'
+    '・切勿將已施咒的卷軸重複投入，咒語會相互抵銷、護法盡失。'
+    '</div>',
+    unsafe_allow_html=True,
 )
 
 SUPPORTED = ["jpg", "jpeg", "png", "webp"]
@@ -134,7 +151,10 @@ cfg = ProtectionConfig(
 uploaded = st.file_uploader("獻上你的卷軸", type=SUPPORTED, accept_multiple_files=False)
 
 if uploaded is None:
-    st.info("⬆️ 上傳 JPG、PNG 或 WEBP，上傳後會自動處理。")
+    st.markdown(
+        '<div class="scroll-note">⬆️ 上傳 JPG、PNG 或 WEBP，上傳後會自動處理。</div>',
+        unsafe_allow_html=True,
+    )
     st.stop()
 
 data = uploaded.getvalue()
@@ -165,7 +185,11 @@ st.download_button(
 
 st.subheader("施咒後")
 if flip_output:
-    st.warning("⚠️ 下圖是**顛倒+鏡像**的，這是正常的。閱讀時把圖**上下翻轉（垂直翻轉）**即可完全還原。")
+    st.markdown(
+        '<div class="scroll-note warn">⚠️ 下圖是<b>顛倒+鏡像</b>的，這是正常的。'
+        '閱讀時把圖<b>上下翻轉（垂直翻轉）</b>即可完全還原。</div>',
+        unsafe_allow_html=True,
+    )
 st.image(result_bytes, use_container_width=True)
 st.caption(f"{original.width} × {original.height}px · JPG · "
            f"{len(result_bytes) / 1_000_000:.1f} MB · 尺寸已保留")
