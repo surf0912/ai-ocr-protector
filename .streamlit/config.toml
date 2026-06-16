@@ -3,3 +3,8 @@ maxUploadSize = 50
 
 [theme]
 base = "light"
+primaryColor = "#7B2D26"            # 酒紅 — 按鈕/重點
+backgroundColor = "#EFE2C4"         # 羊皮紙底
+secondaryBackgroundColor = "#E3D2A8" # 元件底(展開區/輸入框)
+textColor = "#3A2A17"               # 深棕字
+font = "serif"                      # 襯線字,卷軸感

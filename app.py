@@ -24,6 +24,23 @@ st.set_page_config(
     layout="centered", initial_sidebar_state="collapsed",
 )
 
+# Parchment background (aged-paper warmth via layered radial gradients).
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-color: #EFE2C4;
+        background-image:
+            radial-gradient(at 50% 0%, rgba(255,250,235,0.55), rgba(0,0,0,0) 70%),
+            radial-gradient(at 100% 100%, rgba(150,110,60,0.20), rgba(0,0,0,0) 60%),
+            radial-gradient(at 0% 100%, rgba(150,110,60,0.16), rgba(0,0,0,0) 60%);
+        background-attachment: fixed;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 st.title("🪄 麻瓜驅逐咒")
 
 st.info(
