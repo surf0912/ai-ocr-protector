@@ -323,8 +323,10 @@ if band_on:
         band_title = st.text_input("篇名", placeholder="例：第一章 風起")
     with col_a:
         band_author = st.text_input("作者名稱", placeholder="例：佚名")
+    # Use the viewer's own browser timezone (Singapore, US, …), not the server's.
     try:
-        _today = datetime.now(ZoneInfo("Asia/Taipei")).date()  # pin to TW, not server tz
+        _tz = st.context.timezone
+        _today = datetime.now(ZoneInfo(_tz)).date() if _tz else date.today()
     except Exception:
         _today = date.today()
     band_date = st.date_input("日期", value=_today).strftime("%Y-%m-%d")

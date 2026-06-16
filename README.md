@@ -54,7 +54,8 @@ into a collapsed section so you can skip them.
 ### Title band (署名橫幅, optional)
 
 Toggle on 署名橫幅 to stamp a parchment credit strip on top of every image with
-**篇名 / 作者名稱 / 日期** (date defaults to *today in Asia/Taipei*, editable).
+**篇名 / 作者名稱 / 日期** (date defaults to *today in the viewer's own browser
+timezone* via `st.context.timezone`, editable).
 The band is drawn crisp and added *before* the flip, so it rides along and reads
 upright once the viewer flips it back. Rendered with **Noto Sans CJK**, so it
 works for both Traditional and Simplified Chinese. Applies to the whole batch.
