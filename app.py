@@ -64,6 +64,22 @@ st.markdown(
     .stButton button, [data-testid="stWidgetLabel"], .scroll-note {
         font-family: 'XiaoDou', serif !important;
     }
+
+    /* Force the custom font into Streamlit / BaseWeb selectbox and dropdown menu. */
+    div[data-baseweb="select"],
+    div[data-baseweb="select"] *,
+    div[data-baseweb="popover"],
+    div[data-baseweb="popover"] *,
+    div[role="listbox"],
+    div[role="listbox"] *,
+    div[role="option"],
+    div[role="option"] *,
+    ul[data-testid="stVirtualDropdown"],
+    ul[data-testid="stVirtualDropdown"] *,
+    li[data-testid="stVirtualDropdownOption"],
+    li[data-testid="stVirtualDropdownOption"] * {
+        font-family: 'XiaoDou', serif !important;
+    }
     [data-testid="stIconMaterial"], .material-icons, .material-icons-outlined,
     .material-icons-rounded {
         font-family: 'Material Symbols Rounded','Material Symbols Outlined','Material Icons' !important;
