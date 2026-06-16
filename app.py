@@ -34,6 +34,12 @@ def _parchment_data_uri() -> str:
     return "data:image/jpeg;base64," + base64.b64encode(img.read_bytes()).decode()
 
 
+@st.cache_data
+def _font_data_uri() -> str:
+    f = Path(__file__).parent / "assets" / "uifont.woff2"
+    return "data:font/woff2;base64," + base64.b64encode(f.read_bytes()).decode()
+
+
 st.markdown(
     """
     <style>
@@ -48,6 +54,20 @@ st.markdown(
         background-repeat: no-repeat;
     }
     [data-testid="stHeader"] { background: transparent; }
+    @font-face {
+        font-family: 'XiaoDou';
+        src: url("__FONT__") format('woff2');
+        font-display: swap;
+    }
+    html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMarkdownContainer"],
+    h1, h2, h3, h4, h5, h6, p, label, button, input, textarea, select,
+    .stButton button, [data-testid="stWidgetLabel"], .scroll-note {
+        font-family: 'XiaoDou', serif !important;
+    }
+    [data-testid="stIconMaterial"], .material-icons, .material-icons-outlined,
+    .material-icons-rounded {
+        font-family: 'Material Symbols Rounded','Material Symbols Outlined','Material Icons' !important;
+    }
     .scroll-note {
         background-color: rgba(233,216,174,0.90);
         border: 1px solid #C2A867;
@@ -61,7 +81,7 @@ st.markdown(
     .scroll-note .scroll-title { font-weight: 700; margin-bottom: 0.35rem; }
     .scroll-note.warn { border-left-color: #9A6B1F; background-color: rgba(236,221,176,0.90); }
     </style>
-    """.replace("__BG__", _parchment_data_uri()),
+    """.replace("__BG__", _parchment_data_uri()).replace("__FONT__", _font_data_uri()),
     unsafe_allow_html=True,
 )
 
