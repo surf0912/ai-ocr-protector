@@ -77,25 +77,30 @@ class ProtectionConfig:
 
 
 # Protection presets ---------------------------------------------------------
+# Empirically, light warp+noise alone does NOT stop strong multimodal models
+# (GPT/Claude). What actually degrades them is a visible disruption mask + a
+# stronger warp. So the recommended default ("Standard") keeps the mask ON and
+# accepts that the output looks processed. "Light" is kept but honestly labelled
+# as effective only against basic OCR.
 PRESETS: dict[str, dict] = {
-    "Stealth": dict(  # human-eye impact ~ none
-        warp_enabled=True, warp_amplitude=1.2, warp_cell=0.05,
-        noise_enabled=True, noise_sigma=3.0,
+    "Standard": dict(  # recommended: stops most AI; looks processed but readable
+        warp_enabled=True, warp_amplitude=2.5, warp_cell=0.05,
+        noise_enabled=True, noise_sigma=6.0,
+        mask_enabled=True, mask_opacity=0.11, use_grid=False,
+        use_diagonal=True, use_crosshatch=True,
+        rotate_180=True, flip_horizontal=True, blur_enabled=False,
+    ),
+    "Maximum": dict(  # hardest for AI; clearly processed
+        warp_enabled=True, warp_amplitude=3.5, warp_cell=0.045,
+        noise_enabled=True, noise_sigma=10.0,
+        mask_enabled=True, mask_opacity=0.16, use_grid=True,
+        use_diagonal=True, use_crosshatch=True,
+        rotate_180=True, flip_horizontal=True, blur_enabled=False,
+    ),
+    "Light": dict(  # honest: stops basic OCR only, NOT strong multimodal models
+        warp_enabled=True, warp_amplitude=1.5, warp_cell=0.05,
+        noise_enabled=True, noise_sigma=4.0,
         mask_enabled=False,
-        rotate_180=True, flip_horizontal=True, blur_enabled=False,
-    ),
-    "Balanced": dict(  # slight texture if you look closely
-        warp_enabled=True, warp_amplitude=2.0, warp_cell=0.05,
-        noise_enabled=True, noise_sigma=5.0,
-        mask_enabled=True, mask_opacity=0.07, use_grid=False,
-        use_diagonal=True, use_crosshatch=True,
-        rotate_180=True, flip_horizontal=True, blur_enabled=False,
-    ),
-    "Maximum": dict(  # clearly processed but still readable
-        warp_enabled=True, warp_amplitude=3.0, warp_cell=0.045,
-        noise_enabled=True, noise_sigma=8.0,
-        mask_enabled=True, mask_opacity=0.12, use_grid=True,
-        use_diagonal=True, use_crosshatch=True,
         rotate_180=True, flip_horizontal=True, blur_enabled=False,
     ),
 }
