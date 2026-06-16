@@ -74,6 +74,7 @@ components.html(
     width=0,
 )
 
+
 # Parchment background from a real paper texture (embedded as base64 so it always
 # loads on Streamlit Cloud), plus custom "scroll card" notices.
 @st.cache_data
@@ -88,9 +89,14 @@ def _font_data_uri() -> str:
     return "data:font/woff2;base64," + base64.b64encode(f.read_bytes()).decode()
 
 
-use_magic_font = st.toggle("使用魔法字體", value=True, help="關閉後會改用系統預設字體，閱讀性比較穩定。")
+use_magic_font = st.toggle(
+    "使用魔法字體",
+    value=True,
+    help="關閉後會改用系統預設字體，閱讀性比較穩定。",
+)
 
-font_css = """
+if use_magic_font:
+    font_css = """
     @font-face {
         font-family: 'XiaoDou';
         src: url("__FONT__") format('woff2');
@@ -105,10 +111,13 @@ font_css = """
     div[role="listbox"], div[role="listbox"] *,
     div[role="option"], div[role="option"] *,
     ul[data-testid="stVirtualDropdown"], ul[data-testid="stVirtualDropdown"] *,
-    li[data-testid="stVirtualDropdownOption"], li[data-testid="stVirtualDropdownOption"] * {
+    li[data-testid="stVirtualDropdownOption"], li[data-testid="stVirtualDropdownOption"] *,
+    .main-title, .main-title * {
         font-family: 'XiaoDou', serif !important;
     }
-""" if use_magic_font else """
+    """
+else:
+    font_css = """
     html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMarkdownContainer"],
     h1, h2, h3, h4, h5, h6, p, label, button, input, textarea, select,
     .stButton button, [data-testid="stWidgetLabel"], .scroll-note,
@@ -117,10 +126,11 @@ font_css = """
     div[role="listbox"], div[role="listbox"] *,
     div[role="option"], div[role="option"] *,
     ul[data-testid="stVirtualDropdown"], ul[data-testid="stVirtualDropdown"] *,
-    li[data-testid="stVirtualDropdownOption"], li[data-testid="stVirtualDropdownOption"] * {
+    li[data-testid="stVirtualDropdownOption"], li[data-testid="stVirtualDropdownOption"] *,
+    .main-title, .main-title * {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif !important;
     }
-"""
+    """
 
 
 st.markdown(
