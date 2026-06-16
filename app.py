@@ -62,9 +62,9 @@ with st.sidebar:
     out_format = "JPG"
 
     flip_output = st.checkbox(
-        "輸出時旋轉 180°(上下顛倒,閱讀時轉回即可)", value=True,
-        help="預設讓 AI／OCR 拿到顛倒的圖以增加干擾;這是旋轉不是鏡像,"
-             "人眼把圖轉 180° 就能正常閱讀,字不會左右相反。",
+        "輸出時旋轉 180° + 鏡像(人可自行復原)", value=True,
+        help="預設讓 AI／OCR 拿到「旋轉並鏡像」過的圖以增加干擾;"
+             "人類知道方法就能翻回正常閱讀。",
     )
 
     with st.expander("進階設定(可選)", expanded=False):
@@ -119,7 +119,7 @@ with st.sidebar:
         use_crosshatch=use_crosshatch,
         use_grid=use_grid,
         rotate_180=flip_output,
-        flip_horizontal=False,
+        flip_horizontal=flip_output,
         blur_enabled=blur_enabled,
         blur_radius=blur_radius,
     )
