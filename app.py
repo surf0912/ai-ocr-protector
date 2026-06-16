@@ -93,7 +93,23 @@ use_magic_font = st.toggle(
     help="關閉後會改用系統預設字體，閱讀性比較穩定。",
 )
 
-title_font_class = "magic-title" if use_magic_font else "system-title"
+title_font_face_css = (
+    f"""
+    @font-face {{
+        font-family: 'TitleXiaoDou';
+        src: url('{_font_data_uri()}') format('woff2');
+        font-display: swap;
+    }}
+    """
+    if use_magic_font
+    else ""
+)
+
+title_font_family = (
+    "'TitleXiaoDou', serif"
+    if use_magic_font
+    else 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif'
+)
 
 if use_magic_font:
     font_css = """
@@ -150,16 +166,6 @@ st.markdown(
     }
 
     __FONT_CSS__
-
-    .magic-title,
-    .magic-title * {
-        font-family: 'XiaoDou', serif !important;
-    }
-
-    .system-title,
-    .system-title * {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif !important;
-    }
 
     [data-testid="stIconMaterial"], .material-icons, .material-icons-outlined,
     .material-icons-rounded {
@@ -229,11 +235,25 @@ st.markdown(
 
 st.markdown(
     f"""
-    <h1 class="main-title {title_font_class}">
-        <span class="title-line">预言家日報</span>
-        <span class="title-dot">・</span>
-        <span class="title-line">防窥工坊</span>
-    </h1>
+    <style>
+    {title_font_face_css}
+
+    .title-force-font,
+    .title-force-font * {{
+        font-family: {title_font_family} !important;
+        font-synthesis: none !important;
+        -webkit-font-smoothing: antialiased !important;
+        text-rendering: geometricPrecision !important;
+    }}
+    </style>
+
+    <div class="title-force-font">
+        <h1 class="main-title">
+            <span class="title-line">预言家日報</span>
+            <span class="title-dot">・</span>
+            <span class="title-line">防窥工坊</span>
+        </h1>
+    </div>
     """,
     unsafe_allow_html=True,
 )
