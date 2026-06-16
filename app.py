@@ -23,7 +23,7 @@ from processor import (
 )
 
 st.set_page_config(
-    page_title="预言家日報・防窥工坊",
+    page_title="預言家日報・防窺工坊",
     page_icon="🪄",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -66,7 +66,7 @@ components.html(
 
     upsertMeta("theme-color", "#8a2d2d");
     upsertMeta("apple-mobile-web-app-capable", "yes");
-    upsertMeta("apple-mobile-web-app-title", "预言家日報・防窥工坊");
+    upsertMeta("apple-mobile-web-app-title", "預言家日報・防窺工坊");
     upsertMeta("apple-mobile-web-app-status-bar-style", "black-translucent");
     </script>
     """,
@@ -249,9 +249,9 @@ st.markdown(
 
     <div class="title-force-font">
         <h1 class="main-title">
-            <span class="title-line">预言家日報</span>
+            <span class="title-line">預言家日報</span>
             <span class="title-dot">・</span>
-            <span class="title-line">防窥工坊</span>
+            <span class="title-line">防窺工坊</span>
         </h1>
     </div>
     """,
