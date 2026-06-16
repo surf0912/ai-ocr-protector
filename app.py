@@ -86,7 +86,7 @@ def _parchment_data_uri() -> str:
 use_magic_font = st.toggle(
     "使用魔法字體",
     value=True,
-    help="關閉後會改用系統預設字體，閱讀性比較穩定。",
+    help="關閉後會改用系統預設字體，會比較好讀。",
 )
 
 title_font_face_css = (
@@ -300,22 +300,22 @@ with st.expander("進階魔法"):
         100,
         92,
         1,
-        help="數字越低檔案越小；92 是不錯的平衡。",
+        help="數字越低，圖片越小；92 是不錯的平衡。",
     )
 
     st.markdown("**微形變 (Micro-warp)**")
-    warp_enabled = st.checkbox("啟用微形變", value=base.warp_enabled)
+    warp_enabled = st.checkbox("施展微形變", value=base.warp_enabled)
     warp_amplitude = st.slider(
         "形變強度 (px)",
         0.0,
         15.0,
         float(base.warp_amplitude),
         0.5,
-        help="越大越能干擾，但扭曲越明顯。",
+        help="越大越能干擾，但變形越明顯。",
     )
 
     st.markdown("**干擾遮罩**")
-    mask_enabled = st.checkbox("啟用遮罩", value=base.mask_enabled)
+    mask_enabled = st.checkbox("施展遮罩", value=base.mask_enabled)
     mask_opacity = st.slider("遮罩不透明度", 0.03, 0.40, float(base.mask_opacity), 0.01)
 
     col_a, col_b, col_c = st.columns(3)
@@ -330,7 +330,7 @@ with st.expander("進階魔法"):
     line_width = st.slider("線寬 (px)", 1, 4, (base.line_width_min, base.line_width_max))
 
     st.markdown("**雜訊 / 模糊**")
-    noise_enabled = st.checkbox("啟用高斯雜訊", value=base.noise_enabled)
+    noise_enabled = st.checkbox("施展高斯雜訊", value=base.noise_enabled)
     noise_sigma = st.slider("雜訊強度 (σ)", 0.0, 20.0, float(base.noise_sigma), 0.5)
     blur_enabled = st.checkbox("輕微模糊（會降低可讀性）", value=base.blur_enabled)
     blur_radius = st.slider("模糊半徑 (px)", 0.0, 1.0, float(base.blur_radius), 0.1)
@@ -356,7 +356,7 @@ cfg = ProtectionConfig(
     blur_radius=blur_radius,
 )
 
-uploaded = st.file_uploader("獻上你的卷軸", type=SUPPORTED, accept_multiple_files=False)
+uploaded = st.file_uploader("獻上卷軸", type=SUPPORTED, accept_multiple_files=False)
 
 if uploaded is None:
     st.markdown(
