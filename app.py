@@ -52,22 +52,15 @@ with st.sidebar:
         help="Stealth = practically invisible to the eye. Maximum = most "
              "disruptive but you can tell it was processed.",
     )
-    out_format = st.radio(
-        "Output format", ["JPG", "PNG"], horizontal=True,
-        help="JPG is best for photos. PNG is lossless but, because of the noise "
-             "layer, becomes very large (often 5–10× the original).",
-    )
-    if out_format == "JPG":
-        jpg_quality = st.slider("JPG quality", 60, 100, 92, 1,
-                                help="Lower = smaller file. 92 is a good balance.")
-    else:
-        jpg_quality = 92
-        st.caption("⚠️ PNG of a noisy photo can be much larger than the original. "
-                   "Use JPG for photos.")
+    # Always JPG: PNG of a noisy photo balloons to 5-10x the original.
+    out_format = "JPG"
 
     with st.expander("Advanced (optional)", expanded=False):
         st.caption("Override the preset. Defaults follow the chosen preset.")
         base = config_from_preset(preset_name)
+
+        jpg_quality = st.slider("JPG quality", 60, 100, 92, 1,
+                                help="Lower = smaller file. 92 is a good balance.")
 
         st.markdown("**Micro-warp** — low human impact, main anti-OCR effect")
         warp_enabled = st.checkbox("Enable micro-warp", value=base.warp_enabled)
@@ -158,11 +151,8 @@ with right:
     st.subheader("Protected")
     st.image(result_bytes, use_container_width=True)
     out_mb = len(result_bytes) / 1_000_000
-    note = ""
-    if out_format == "PNG" and len(result_bytes) > 2 * len(data):
-        note = " — try JPG for a much smaller file"
-    st.caption(f"{original.width} × {original.height}px · {out_format} · {out_mb:.1f} MB"
-               f" · dimensions preserved{note}")
+    st.caption(f"{original.width} × {original.height}px · JPG · {out_mb:.1f} MB"
+               " · dimensions preserved")
 
 ext = "jpg" if out_format == "JPG" else "png"
 stem = uploaded.name.rsplit(".", 1)[0]
