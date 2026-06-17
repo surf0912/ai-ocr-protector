@@ -25,7 +25,7 @@ class RegisterWithInvite(BaseModel):
 def generate_invite(
     body: InviteCreate,
     user: dict = Depends(require_admin),
-    sb: Client = Depends(get_supabase),
+    sb: Client = Depends(get_supabase_admin),
 ):
     # admin can only grant reader/writer; super_admin can also grant admin
     allowed = ["reader", "writer"]
@@ -42,7 +42,7 @@ def generate_invite(
     return {"token": token, "role": body.role}
 
 @router.get("/validate/{token}")
-def validate_invite(token: str, sb: Client = Depends(get_supabase)):
+def validate_invite(token: str, sb: Client = Depends(get_supabase_admin)):
     res = sb.table("invite_tokens").select("*").eq("token", token).single().execute()
     if not res.data:
         raise HTTPException(404, "邀請連結無效")
@@ -97,7 +97,7 @@ def register_with_invite(body: RegisterWithInvite, sb_admin: Client = Depends(ge
     return {"message": "註冊成功，請使用你的帳號登入"}
 
 @router.get("/list")
-def list_invites(user: dict = Depends(require_admin), sb: Client = Depends(get_supabase)):
+def list_invites(user: dict = Depends(require_admin), sb: Client = Depends(get_supabase_admin)):
     res = (
         sb.table("invite_tokens")
         .select("id, token, role, created_at, expires_at, used_at, profiles!invite_tokens_used_by_fkey(username)")
@@ -107,6 +107,6 @@ def list_invites(user: dict = Depends(require_admin), sb: Client = Depends(get_s
     return res.data
 
 @router.delete("/{invite_id}")
-def revoke_invite(invite_id: str, user: dict = Depends(require_admin), sb: Client = Depends(get_supabase)):
+def revoke_invite(invite_id: str, user: dict = Depends(require_admin), sb: Client = Depends(get_supabase_admin)):
     sb.table("invite_tokens").delete().eq("id", invite_id).execute()
     return {"message": "Revoked"}

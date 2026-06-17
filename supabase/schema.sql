@@ -204,10 +204,10 @@ create table public.invite_tokens (
 
 alter table public.invite_tokens enable row level security;
 
--- Anyone can validate a token (needed before login)
-create policy "Anyone can read invite tokens for validation"
-  on public.invite_tokens for select
-  using (true);
+-- NOTE: invite tokens are SECRET capabilities. They are validated server-side by
+-- the FastAPI backend using the service role, so we deliberately do NOT grant
+-- anon/authenticated SELECT here — that would let anyone enumerate unused tokens
+-- and self-register (potentially as admin). Service role bypasses RLS.
 
 -- Only admins/super_admin can create invite tokens
 create policy "Admins can manage invite tokens"

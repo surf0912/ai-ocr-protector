@@ -14,6 +14,7 @@ async def protect_image(
     _user: dict = Depends(get_current_user),
 ):
     img_bytes = await image.read()
-    cfg = config_from_preset(preset or "standard")
-    protected = protect_bytes(img_bytes, cfg)
-    return Response(content=protected, media_type="image/png")
+    # Preset keys are capitalised (Standard/Maximum/Extreme); normalise the input.
+    cfg = config_from_preset((preset or "standard").strip().capitalize())
+    protected = protect_bytes(img_bytes, cfg, "JPG")  # JPG: PNG balloons on noisy output
+    return Response(content=protected, media_type="image/jpeg")
