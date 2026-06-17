@@ -8,12 +8,20 @@ from __future__ import annotations
 
 import base64
 import io
+import json
+import re
 from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import streamlit as st
 from PIL import Image
+
+try:
+    from streamlit_js_eval import streamlit_js_eval
+    _HAS_JS_EVAL = True
+except Exception:  # degrade gracefully to within-session persistence
+    _HAS_JS_EVAL = False
 
 from processor import (
     PRESETS,
@@ -326,11 +334,20 @@ cfg = ProtectionConfig(
 st.markdown("**署名橫幅（選填）** — 印在每張頂端、跟著一起翻轉，翻回後即為正向（繁簡皆可）")
 band_on = st.checkbox("加上署名橫幅", value=False)
 if band_on:
+    # Restore last-used author from the browser's localStorage (survives reload).
+    if _HAS_JS_EVAL and not st.session_state.get("_author_loaded"):
+        _saved = streamlit_js_eval(
+            js_expressions="localStorage.getItem('pyw_author') || ''", key="ls_author_get"
+        )
+        if _saved is not None:  # component has responded
+            st.session_state["band_author_input"] = _saved
+            st.session_state["_author_loaded"] = True
+
     col_t, col_a = st.columns(2)
     with col_t:
         band_title = st.text_input("篇名", placeholder="例：第一章 風起")
     with col_a:
-        band_author = st.text_input("作者名稱", placeholder="例：佚名")
+        band_author = st.text_input("作者名稱", key="band_author_input", placeholder="例：佚名")
     # Use the viewer's own browser timezone (Singapore, US, …), not the server's.
     try:
         _tz = st.context.timezone
@@ -338,6 +355,13 @@ if band_on:
     except Exception:
         _today = date.today()
     band_date = st.date_input("日期", value=_today).strftime("%Y-%m-%d")
+
+    # Remember the author for next time (persists across reloads).
+    if _HAS_JS_EVAL and band_author:
+        streamlit_js_eval(
+            js_expressions=f"localStorage.setItem('pyw_author', {json.dumps(band_author)})",
+            key=f"ls_author_set::{band_author}",
+        )
 else:
     band_title = band_author = band_date = ""
 
@@ -352,9 +376,17 @@ if not uploaded_files:
     )
     st.stop()
 
+def _safe_name(s: str) -> str:
+    """Make a string safe to use in a filename (keep CJK, drop illegal chars)."""
+    s = re.sub(r'[\\/:*?"<>|\x00-\x1f]+', "", s).strip().replace(" ", "_")
+    return s[:60] or "untitled"
+
+
 # Process every uploaded image (sequential, so memory stays bounded).
-results = []  # (name, raw_bytes, protected_bytes, (w, h))
-progress = st.progress(0.0) if len(uploaded_files) > 1 else None
+results = []  # (filename, raw, protected, (w, h), original_name, page_label)
+total = len(uploaded_files)
+width = len(str(total))
+progress = st.progress(0.0) if total > 1 else None
 for i, uf in enumerate(uploaded_files):
     raw = uf.getvalue()
     try:
@@ -363,11 +395,29 @@ for i, uf in enumerate(uploaded_files):
     except Exception as exc:
         st.error(f"無法讀取「{uf.name}」：{exc}")
         continue
-    with st.spinner(f"揮舞魔杖中…（{i + 1}/{len(uploaded_files)}）"):
-        protected = _run(raw, cfg.to_dict(), jpg_quality, band_author, band_title, band_date)
-    results.append((uf.name, raw, protected, im.size))
+    idx = i + 1
+    page = f"{idx}/{total}" if total > 1 else ""
+    # Same 篇名 + many pages → band shows the page order (篇名 1/5, 2/5, …).
+    if band_on and page:
+        title_i = f"{band_title}（{page}）" if band_title else page
+    else:
+        title_i = band_title
+    with st.spinner(f"揮舞魔杖中…（{idx}/{total}）"):
+        protected = _run(raw, cfg.to_dict(), jpg_quality, band_author, title_i, band_date)
+    # Meaningful filename: 篇名_日期_序號, else fall back to the original name.
+    if band_on and band_title:
+        bits = [_safe_name(band_title)]
+        if band_date:
+            bits.append(band_date)
+        if total > 1:
+            bits.append(f"{idx:0{width}d}")
+        fname = "_".join(bits) + ".jpg"
+    else:
+        stem = uf.name.rsplit(".", 1)[0]
+        fname = f"{stem}_protected" + (f"_{idx:0{width}d}" if total > 1 else "") + ".jpg"
+    results.append((fname, raw, protected, im.size, uf.name, page))
     if progress:
-        progress.progress((i + 1) / len(uploaded_files))
+        progress.progress(idx / total)
 if progress:
     progress.empty()
 
@@ -383,20 +433,17 @@ if len(results) > 1:
     )
 
 # All download buttons grouped together so you can tap through them quickly.
-for idx, (name, raw, protected, size) in enumerate(results):
-    stem = name.rsplit(".", 1)[0]
-    if len(results) > 1:
-        label = f"{idx + 1}/{len(results)} 速速前！取回「{stem}」"
-    else:
-        label = "速速前！取回卷軸——Accio!"
+for i, (fname, raw, protected, size, original, page) in enumerate(results):
+    base = fname.rsplit(".", 1)[0]
+    label = f"{page} 速速前！取回「{base}」" if page else "速速前！取回卷軸——Accio!"
     st.download_button(
         label,
         data=protected,
-        file_name=f"{stem}_protected.jpg",
+        file_name=fname,
         mime="image/jpeg",
         type="primary",
         use_container_width=True,
-        key=f"dl_{idx}",
+        key=f"dl_{i}",
     )
 
 # Two sections: all protected together, then all originals (collapsed).
@@ -404,14 +451,14 @@ n = len(results)
 suffix = f"（{n} 張）" if n > 1 else ""
 
 with st.expander("預覽成品" + suffix, expanded=True):
-    for name, raw, protected, size in results:
+    for fname, raw, protected, size, original, page in results:
         st.image(protected, use_container_width=True)
         st.caption(
-            f"「{name}」· {size[0]} × {size[1]}px · JPG · "
+            f"「{fname}」· {size[0]} × {size[1]}px · JPG · "
             f"{len(protected) / 1_000_000:.1f} MB · 尺寸已保留"
         )
 
 with st.expander("窺看原貌" + suffix, expanded=False):
-    for name, raw, protected, size in results:
+    for fname, raw, protected, size, original, page in results:
         st.image(raw, use_container_width=True)
-        st.caption(f"「{name}」· 原檔")
+        st.caption(f"「{original}」· 原檔")

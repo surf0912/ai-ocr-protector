@@ -45,6 +45,12 @@ is both comfortable for humans and reliably defeats modern multimodal models —
 geometric flips don't stop them, and disruption strong enough to stop them also
 hurts human reading. Re-screenshotting / re-compressing can also weaken it.
 
+**Batch niceties:** uploading N pages of one work auto-numbers the band (`篇名
+（1/5）`, `2/5`, …) and the download filenames (`篇名_2026-06-17_01.jpg`). The
+author is remembered across reloads via the browser's `localStorage`
+(`streamlit-js-eval`). Default JPG quality is 80 (noise/mask make protected images
+poorly compressible, so files are inherently larger than a plain screenshot).
+
 ### Multi-image
 
 Upload several images at once → each is processed and gets its own **numbered
