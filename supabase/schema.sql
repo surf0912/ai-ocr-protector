@@ -12,7 +12,7 @@ create extension if not exists "uuid-ossp";
 create table public.profiles (
   id          uuid references auth.users on delete cascade primary key,
   username    text unique not null,
-  role        text not null default 'reader' check (role in ('admin', 'reader')),
+  role        text not null default 'reader' check (role in ('super_admin', 'admin', 'writer', 'reader')),
   avatar_url  text,
   created_at  timestamptz default now()
 );
@@ -116,10 +116,10 @@ create policy "Authenticated users can view novels"
 create policy "Admins can manage novels"
   on public.novels for all
   using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    exists (select 1 from public.profiles where id = auth.uid() and role in ('admin', 'super_admin'))
   );
 
--- CHAPTERS: only users with permission (or admins)
+-- CHAPTERS: only users with permission (or admins/writers)
 create policy "Users with permission can read chapters"
   on public.chapters for select
   to authenticated
@@ -129,13 +129,13 @@ create policy "Users with permission can read chapters"
       where user_id = auth.uid() and novel_id = chapters.novel_id
     )
     or
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    exists (select 1 from public.profiles where id = auth.uid() and role in ('admin', 'super_admin'))
   );
 
 create policy "Admins can manage chapters"
   on public.chapters for all
   using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    exists (select 1 from public.profiles where id = auth.uid() and role in ('admin', 'super_admin', 'writer'))
   );
 
 -- PERMISSIONS
@@ -143,13 +143,13 @@ create policy "Users can view own permissions"
   on public.permissions for select
   to authenticated
   using (user_id = auth.uid() or
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    exists (select 1 from public.profiles where id = auth.uid() and role in ('admin', 'super_admin'))
   );
 
 create policy "Admins can manage permissions"
   on public.permissions for all
   using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    exists (select 1 from public.profiles where id = auth.uid() and role in ('admin', 'super_admin'))
   );
 
 -- COMMENTS: only users with access to the parent novel
@@ -163,7 +163,7 @@ create policy "Users with novel access can read comments"
       where c.id = comments.chapter_id and p.user_id = auth.uid()
     )
     or
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    exists (select 1 from public.profiles where id = auth.uid() and role in ('admin', 'super_admin'))
   );
 
 create policy "Users with novel access can create comments"
@@ -185,7 +185,35 @@ create policy "Users can delete own comments"
 create policy "Admins can delete any comment"
   on public.comments for delete
   using (
-    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+    exists (select 1 from public.profiles where id = auth.uid() and role in ('admin', 'super_admin'))
+  );
+
+-- ============================================================
+-- INVITE TOKENS
+-- ============================================================
+create table public.invite_tokens (
+  id          uuid primary key default uuid_generate_v4(),
+  token       text unique not null default encode(gen_random_bytes(24), 'hex'),
+  role        text not null default 'reader' check (role in ('admin', 'writer', 'reader')),
+  created_by  uuid references public.profiles(id),
+  created_at  timestamptz default now(),
+  expires_at  timestamptz default (now() + interval '7 days'),
+  used_by     uuid references public.profiles(id),
+  used_at     timestamptz
+);
+
+alter table public.invite_tokens enable row level security;
+
+-- Anyone can validate a token (needed before login)
+create policy "Anyone can read invite tokens for validation"
+  on public.invite_tokens for select
+  using (true);
+
+-- Only admins/super_admin can create invite tokens
+create policy "Admins can manage invite tokens"
+  on public.invite_tokens for all
+  using (
+    exists (select 1 from public.profiles where id = auth.uid() and role in ('super_admin', 'admin'))
   );
 
 -- ============================================================

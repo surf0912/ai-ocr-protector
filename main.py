@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from routers import auth, novels, chapters, comments, permissions, protect
+from routers import auth, novels, chapters, comments, permissions, protect, invites
 
 app = FastAPI(title="預言家日報 API", version="1.0.0")
 
@@ -19,6 +19,7 @@ app.include_router(chapters.router,    prefix="/chapters",    tags=["chapters"])
 app.include_router(comments.router,    prefix="/comments",    tags=["comments"])
 app.include_router(permissions.router, prefix="/permissions", tags=["permissions"])
 app.include_router(protect.router,     prefix="/protect",     tags=["protect"])
+app.include_router(invites.router,     prefix="/invites",     tags=["invites"])
 
 @app.get("/")
 def root():

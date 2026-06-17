@@ -1,39 +1,36 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, EmailStr
-from deps import get_supabase, get_current_user
+from pydantic import BaseModel
+from deps import get_supabase, get_supabase_admin, get_current_user
 from supabase import Client
 
 router = APIRouter()
 
-class SignUpRequest(BaseModel):
-    email: EmailStr
-    password: str
-    username: str
+INTERNAL_DOMAIN = "prophet-daily.internal"
+
+def username_to_email(username: str) -> str:
+    return f"{username.lower()}@{INTERNAL_DOMAIN}"
 
 class SignInRequest(BaseModel):
-    email: EmailStr
+    username: str
     password: str
 
-@router.post("/signup")
-def signup(body: SignUpRequest, sb: Client = Depends(get_supabase)):
-    res = sb.auth.sign_up({
-        "email": body.email,
-        "password": body.password,
-        "options": {"data": {"username": body.username}},
-    })
-    if res.user is None:
-        raise HTTPException(400, "Signup failed")
-    return {"message": "Check your email to confirm signup"}
+class SignUpRequest(BaseModel):
+    username: str
+    password: str
 
 @router.post("/signin")
 def signin(body: SignInRequest, sb: Client = Depends(get_supabase)):
-    res = sb.auth.sign_in_with_password({"email": body.email, "password": body.password})
+    email = username_to_email(body.username)
+    try:
+        res = sb.auth.sign_in_with_password({"email": email, "password": body.password})
+    except Exception:
+        raise HTTPException(401, "用戶名或密碼錯誤")
     if res.session is None:
-        raise HTTPException(401, "Invalid credentials")
+        raise HTTPException(401, "用戶名或密碼錯誤")
     return {
         "access_token": res.session.access_token,
         "refresh_token": res.session.refresh_token,
-        "user": {"id": res.user.id, "email": res.user.email},
+        "user": {"id": res.user.id},
     }
 
 @router.get("/me")
