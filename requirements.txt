@@ -1,11 +1,8 @@
-fastapi>=0.111.0
-uvicorn[standard]>=0.29.0
-python-multipart>=0.0.9
-supabase>=2.4.0
-pytesseract>=0.3.10
+# 防窺工坊 — Streamlit app (app.py), deployed on Streamlit Cloud.
+# Streamlit Cloud always reads requirements.txt, so this file is the Streamlit
+# app's deps. The FastAPI backend (main.py) uses requirements-api.txt instead.
+streamlit>=1.41
+streamlit-js-eval>=0.1.7
 Pillow>=10.0
 numpy>=1.24
-python-jose[cryptography]>=3.3.0
-httpx>=0.27.0
-pydantic-settings>=2.2.0
 tzdata>=2024.1
