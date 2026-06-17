@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-from deps import get_supabase, get_current_user, require_admin
+from deps import get_supabase_admin, get_current_user, require_admin, is_admin
 from supabase import Client
 
 router = APIRouter()
@@ -15,7 +15,7 @@ class CommentCreate(BaseModel):
 def list_comments(
     chapter_id: str,
     user: dict = Depends(get_current_user),
-    sb: Client = Depends(get_supabase),
+    sb: Client = Depends(get_supabase_admin),
 ):
     # Verify user has access to the novel containing this chapter
     ch = sb.table("chapters").select("novel_id").eq("id", chapter_id).single().execute()
@@ -36,7 +36,7 @@ def list_comments(
 def create_comment(
     body: CommentCreate,
     user: dict = Depends(get_current_user),
-    sb: Client = Depends(get_supabase),
+    sb: Client = Depends(get_supabase_admin),
 ):
     ch = sb.table("chapters").select("novel_id").eq("id", body.chapter_id).single().execute()
     if not ch.data:
@@ -55,18 +55,18 @@ def create_comment(
 def delete_comment(
     comment_id: str,
     user: dict = Depends(get_current_user),
-    sb: Client = Depends(get_supabase),
+    sb: Client = Depends(get_supabase_admin),
 ):
     res = sb.table("comments").select("user_id").eq("id", comment_id).single().execute()
     if not res.data:
         raise HTTPException(404, "Comment not found")
-    if res.data["user_id"] != user["id"] and user["role"] != "admin":
+    if res.data["user_id"] != user["id"] and not is_admin(user):
         raise HTTPException(403, "Cannot delete others' comments")
     sb.table("comments").delete().eq("id", comment_id).execute()
     return {"message": "Deleted"}
 
 def _check_novel_access(novel_id: str, user: dict, sb: Client):
-    if user["role"] == "admin":
+    if is_admin(user):
         return
     perm = sb.table("permissions").select("id").eq("user_id", user["id"]).eq("novel_id", novel_id).execute()
     if not perm.data:
