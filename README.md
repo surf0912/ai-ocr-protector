@@ -85,32 +85,20 @@ python3 -m venv .venv
 
 - **Background:** `assets/parchment.jpg` (a real paper photo, optimised to 1920px)
   is embedded as base64 in the CSS so it always loads same-origin.
-- **Font:** `小豆`→ now **Yusei Magic**. The 6 MB source TTF
-  (`assets/YuseiMagic-Regular-2.ttf`) is **subset to the glyphs the UI actually
-  uses** → `assets/uifont.woff2` (~67 KB), embedded as base64. No external CDN.
+- **Fonts:** the UI uses **Yusei Magic** with a **粉圓** fallback (CSS stack
+  `'YuseiMagic', 'HuninnUI', serif`) — Yusei for the glyphs it has, 粉圓 for the
+  common Traditional chars Yusei lacks (你/每/啟/…), so no serif tofu. Both are
+  **subset** to the glyphs the UI uses and embedded as base64 woff2 (no CDN).
 
-Regenerate the subset after changing UI text (keeps file tiny + avoids missing
-glyphs):
+  After changing any UI text, regenerate the subsets:
 
-```bash
-python - <<'PY'
-import string; from pathlib import Path
-chars = set(Path("app.py").read_text("utf-8")) | set(string.printable) | set("0123456789")
-chars |= set("×·…—、。，！？：；「」（）『』〇±•‧σµ²³°'‘“”")
-Path("/tmp/subset.txt").write_text("".join(sorted(chars)), "utf-8")
-PY
-pyftsubset assets/YuseiMagic-Regular-2.ttf --text-file=/tmp/subset.txt \
-  --flavor=woff2 --output-file=assets/uifont.woff2 --layout-features='*' --desubroutinize
-# fallback (粉圓) — covers Traditional glyphs Yusei Magic is missing (你/每/啟/…)
-pyftsubset <jf-openhuninn.ttf> --text-file=/tmp/subset.txt \
-  --flavor=woff2 --output-file=assets/uifont-fallback.woff2 --layout-features='*' --desubroutinize
-```
+  ```bash
+  ./.venv/bin/python regen_fonts.py        # needs: pip install fonttools brotli
+  ```
 
-> Yusei Magic is a Japanese font and lacks several common Traditional characters,
-> so the CSS font stack is `'YuseiMagic', 'HuninnUI', serif`: Yusei for the glyphs
-> it has, **粉圓 (`uifont-fallback.woff2`)** for the rest — no serif tofu.
-> **Regenerate BOTH subsets whenever UI text changes.** Verify combined coverage
-> with `fontTools` (every UI CJK char should be in one woff2 or the other).
+  The source TTFs are **not committed** (too big) — keep them in `font-sources/`
+  (gitignored): `YuseiMagic-Regular-2.ttf` + `jf-openhuninn.ttf`. The script
+  subsets from there into `assets/uifont*.woff2` and prints a coverage check.
 
 - **Title-band font:** `assets/band-font.otf` (Noto Sans CJK, OFL) — used only
   server-side to draw the credit band, so its 16 MB never reaches the browser. It
@@ -123,9 +111,10 @@ pyftsubset <jf-openhuninn.ttf> --text-file=/tmp/subset.txt \
 | `app.py` | Streamlit UI (parchment theme, font, controls, upload→download) |
 | `processor.py` | Pure pipeline. `process_image()`, `protect_bytes()`, presets — Streamlit-free, reusable for an API |
 | `assets/parchment.jpg` | Background texture (embedded) |
-| `assets/uifont.woff2` | Subset Yusei Magic (embedded) |
-| `assets/YuseiMagic-Regular-2.ttf` | UI font source (for re-subsetting only; not served) |
+| `assets/uifont.woff2` / `uifont-fallback.woff2` | Subset Yusei Magic + 粉圓 (embedded) |
 | `assets/band-font.otf` | Noto Sans CJK — draws the title band server-side (TC + SC) |
+| `regen_fonts.py` | Rebuild the woff2 subsets from `font-sources/` after UI text changes |
+| `font-sources/` *(gitignored)* | Source TTFs for re-subsetting (not committed) |
 | `.streamlit/config.toml` | Upload limit + parchment theme colours |
 
 ## Reuse as a library
@@ -139,8 +128,10 @@ protected = protect_bytes(raw_bytes, config_from_preset("Extreme"), "JPG")
 
 ## Performance
 
-Warp and noise run in row-strips, so a 12 MP phone photo processes in ~1.5 s with
-~700 MB peak RAM. `ProtectionConfig(seed=…)` makes output reproducible.
+Warp and noise run in row-strips, and images over `cfg.max_pixels` (default 16 MP)
+are downscaled before processing — so a 12 MP phone photo is untouched (~1.5 s,
+~700 MB peak), while a 24 MP+ image is capped to bound memory on small hosts.
+`ProtectionConfig(seed=…)` makes output reproducible.
 
 ## Future ideas
 

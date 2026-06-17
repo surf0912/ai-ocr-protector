@@ -71,6 +71,11 @@ class ProtectionConfig:
     blur_enabled: bool = False
     blur_radius: float = 0.4        # 0.3 - 0.5 px
 
+    # Cap the working resolution: images larger than this are downscaled (keeping
+    # aspect ratio) before processing, to bound peak memory on small hosts. Common
+    # 12MP phone photos are untouched; only genuinely huge images (16MP+) shrink.
+    max_pixels: int = 16_000_000
+
     # Reproducibility (None = fresh randomness each run)
     seed: Optional[int] = None
 
@@ -295,11 +300,25 @@ def _apply_blur(img: Image.Image, cfg: ProtectionConfig) -> Image.Image:
 # Public API
 # --------------------------------------------------------------------------- #
 def process_image(img: Image.Image, cfg: ProtectionConfig) -> Image.Image:
-    """Run the full protection pipeline. Output size == input size."""
+    """Run the full protection pipeline. Output size == working size.
+
+    For images larger than ``cfg.max_pixels`` the working size is downscaled
+    (aspect preserved) to bound peak memory on small hosts; otherwise the original
+    dimensions are kept.
+    """
     img = _normalise_orientation(img)
     # Normalise to RGB once up front (RGBA only if the source actually has alpha),
     # so every step works in a predictable, memory-lean mode.
     img = img.convert("RGBA") if "A" in img.getbands() else img.convert("RGB")
+
+    # Cap working resolution for very large images (memory + output-size safety).
+    if cfg.max_pixels and img.width * img.height > cfg.max_pixels:
+        scale = (cfg.max_pixels / (img.width * img.height)) ** 0.5
+        img = img.resize(
+            (max(1, round(img.width * scale)), max(1, round(img.height * scale))),
+            Image.LANCZOS,
+        )
+
     original_size = img.size
 
     rng = random.Random(cfg.seed)

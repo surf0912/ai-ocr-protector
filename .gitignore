@@ -17,8 +17,9 @@ env/
 # Secrets
 .env
 
-# Streamlit legacy
-.streamlit/
+# Font subset sources (large; not committed — regenerate woff2 via regen_fonts.py)
+font-sources/
+.subset_chars.txt
 
 # Local artifacts
 /tmp/
