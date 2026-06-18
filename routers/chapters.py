@@ -73,6 +73,7 @@ async def upload_chapter(
         "source_image": storage_path,
         "created_by": user["id"],
     }).execute()
+    _touch_novel(novel_id, sb_admin)
     return res.data[0]
 
 class ChapterTextBody(BaseModel):
@@ -94,6 +95,7 @@ def create_chapter_text(
         "content": body.content.strip(),
         "created_by": user["id"],
     }).execute()
+    _touch_novel(novel_id, sb_admin)
     return res.data[0]
 
 @router.put("/{chapter_id}/text")
@@ -116,6 +118,10 @@ def update_chapter_text(
 def delete_chapter(chapter_id: str, sb: Client = Depends(get_supabase)):
     sb.table("chapters").delete().eq("id", chapter_id).execute()
     return {"message": "Deleted"}
+
+def _touch_novel(novel_id: str, sb_admin: Client):
+    # bump the work's "latest update" timestamp whenever a chapter is added
+    sb_admin.table("novels").update({"updated_at": "now()"}).eq("id", novel_id).execute()
 
 def _check_novel_access(novel_id: str, user: dict, sb: Client):
     if user["role"] == "admin":
